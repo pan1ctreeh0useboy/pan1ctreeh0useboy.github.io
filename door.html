@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>芥末黄背景与军绿色马赛克</title>
+  <style>
+    /* 容器样式，覆盖整个视口 */
+    #background-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: #FFC107; /* 芥末黄色 */
+      z-index: -1; /* 确保背景在其他内容之下 */
+    }
+
+    /* 马赛克瓦片样式 */
+    .mosaic-tile {
+      position: absolute;
+      background-color: #4B5E40; /* 军绿色 */
+      box-shadow: inset 2px 2px 6px #333333; /* 内阴影，柔和深灰色 */
+    }
+
+    /* 定义缓和跳动动画 */
+    @keyframes bounce {
+      0%, 100% {
+        transform: translateY(0); /* 起始和结束位置 */
+      }
+      50% {
+        transform: translateY(-3px); /* 中间向上移动3像素 */
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="background-container"></div>
+  <!-- 这里可以添加其他页面内容 -->
+
+  <script>
+    // 页面加载完成后执行
+    document.addEventListener('DOMContentLoaded', () => {
+      const container = document.getElementById('background-container');
+      const viewportWidth = window.innerWidth; // 获取视口宽度
+      const viewportHeight = window.innerHeight; // 获取视口高度
+      const numTiles = 100; // 生成100个瓦片
+
+      for (let i = 0; i < numTiles; i++) {
+        const tile = document.createElement('div');
+        tile.className = 'mosaic-tile';
+
+        // 随机生成瓦片大小
+        const width = 10 + Math.random() * 10; // 10到20像素
+        const height = 10 + Math.random() * 20; // 10到30像素
+
+        // 随机生成位置，确保瓦片完全在视口内
+        const left = Math.random() * (viewportWidth - width);
+        const top = Math.random() * (viewportHeight - height);
+
+        // 随机动画持续时间和延迟
+        const duration = 2.5 + Math.random() * 1; // 2.5到3.5秒
+        const delay = -Math.random() * 2; // -2到0秒，使瓦片从不同时间点开始动画
+
+        // 设置瓦片样式
+        tile.style.width = `${width}px`;
+        tile.style.height = `${height}px`;
+        tile.style.left = `${left}px`;
+        tile.style.top = `${top}px`;
+        tile.style.animation = `bounce ${duration}s ease-in-out infinite ${delay}s`; // 应用动画
+
+        // 将瓦片添加到容器中
+        container.appendChild(tile);
+      }
+    });
+  </script>
+</body>
+</html>
