@@ -1,80 +1,72 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>数字信号干扰效果</title>
+    <title>Random Green Pixels</title>
     <style>
         body {
             margin: 0;
-            padding: 0;
-            background-color: #000; /* 黑色背景更接近信号干扰场景 */
-            overflow: hidden;
+            background-color: #FFBB00; /* 黄色改为FFBB00 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
         }
-        canvas {
-            display: block;
-            filter: contrast(150%) saturate(200%); /* 增强颜色冲击力 */
+        
+        #canvas {
+            width: 1920px;
+            height: 1080px;
+            display: grid;
+            grid-template-columns: repeat(64, 30px); /* 1920/30 = 64列 */
+            grid-template-rows: repeat(36, 30px);   /* 1080/30 = 36行 */
+            gap: 0;
+        }
+
+        .pixel {
+            width: 30px;
+            height: 30px;
+            background-color: transparent;
+        }
+
+        .green {
+            background-color: #66D300; /* 绿色改为66D300 */
         }
     </style>
 </head>
 <body>
-    <canvas id="glitchCanvas"></canvas>
+    <div id="canvas"></div>
+
     <script>
-        const canvas = document.getElementById('glitchCanvas');
-        const ctx = canvas.getContext('2d');
-
-        // 设置画布大小
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
+        // 获取canvas容器
+        const canvas = document.getElementById('canvas');
+        
+        // 创建网格（64 × 36 = 2304个像素块）
+        const totalPixels = 64 * 36;
+        for (let i = 0; i < totalPixels; i++) {
+            const pixel = document.createElement('div');
+            pixel.className = 'pixel';
+            canvas.appendChild(pixel);
         }
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
 
-        // 颜色数组，模拟信号干扰的异常色块
-        const glitchColors = ['#00ff00', '#ff00ff', '#00ffff', '#ff0000', '#ffffff', '#808080'];
+        // 获取所有像素块
+        const pixels = document.getElementsByClassName('pixel');
 
-        // 绘制干扰效果
-        function drawGlitch() {
-            // 半透明清屏，保留轻微残影
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // 绘制大块宏块失真
-            for (let i = 0; i < 15; i++) {
-                const blockSizeX = Math.random() * 120 + 60; // 宽度60-180像素
-                const blockSizeY = Math.random() * 80 + 40; // 高度40-120像素
-                const x = Math.random() * (canvas.width - blockSizeX);
-                const y = Math.random() * (canvas.height - blockSizeY);
-                const color = glitchColors[Math.floor(Math.random() * glitchColors.length)];
-                ctx.fillStyle = color;
-                ctx.fillRect(x, y, blockSizeX, blockSizeY);
-
-                // 添加随机错位效果
-                if (Math.random() > 0.7) {
-                    const offsetX = Math.random() * 20 - 10; // -10到10像素的偏移
-                    ctx.fillRect(x + offsetX, y, blockSizeX, blockSizeY);
+        // 随机生成绿色像素的函数
+        function generateNoise() {
+            for (let pixel of pixels) {
+                // 随机决定是否变成绿色（这里使用30%的概率）
+                if (Math.random() < 0.3) {
+                    pixel.classList.add('green');
+                } else {
+                    pixel.classList.remove('green');
                 }
             }
-
-            // 绘制细小噪点，增强细节
-            for (let i = 0; i < 80; i++) {
-                const size = Math.random() * 15 + 5; // 5-20像素
-                const x = Math.random() * canvas.width;
-                const y = Math.random() * canvas.height;
-                const color = glitchColors[Math.floor(Math.random() * glitchColors.length)];
-                ctx.fillStyle = color;
-                ctx.fillRect(x, y, size, size);
-            }
         }
 
-        // 动画循环
-        function animate() {
-            drawGlitch();
-            requestAnimationFrame(animate);
-        }
+        // 初始生成
+        generateNoise();
 
-        animate();
+        // 每0.25秒更新一次
+        setInterval(generateNoise, 250);
     </script>
 </body>
 </html>
