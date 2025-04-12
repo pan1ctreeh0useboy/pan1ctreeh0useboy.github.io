@@ -9,30 +9,27 @@
             margin: 0;
             background-color: #000;
             overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            position: relative;
         }
         canvas {
             display: block;
             image-rendering: pixelated; /* Enhances pixelated look */
         }
-
-        /* Styling the SVG object */
-        #svgContainer {
+        img {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 200px;  /* Adjust width */
-            height: 200px; /* Adjust height */
+            width: 200px; /* You can adjust the size as needed */
+            height: auto;
         }
     </style>
 </head>
 <body>
     <canvas id="waveCanvas"></canvas>
-
-    <!-- SVG object -->
-    <div id="svgContainer">
-        <object id="svgObject" type="image/svg+xml" data="pthp.svg"></object>
-    </div>
+    <!-- Add the SVG image with absolute positioning -->
+    <img src="pthp.svg" alt="SVG Image">
 
     <script>
         const canvas = document.getElementById('waveCanvas');
