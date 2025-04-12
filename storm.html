@@ -14,25 +14,10 @@
             display: block;
             image-rendering: pixelated; /* Enhances pixelated look */
         }
-
-        /* Styling the SVG object */
-        #svgContainer {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 200px;  /* Adjust width */
-            height: 200px; /* Adjust height */
-        }
     </style>
 </head>
 <body>
     <canvas id="waveCanvas"></canvas>
-
-    <!-- SVG object -->
-    <div id="svgContainer">
-        <object id="svgObject" type="image/svg+xml" data="pth.svg"></object>
-    </div>
 
     <script>
         const canvas = document.getElementById('waveCanvas');
@@ -132,23 +117,6 @@
         }
 
         draw();
-
-        // Change the color of the SVG after it has loaded
-        const svgObject = document.getElementById('svgObject');
-
-        svgObject.onload = function() {
-            const svgDoc = svgObject.contentDocument;
-            const svgElement = svgDoc.querySelector('svg'); // Select the SVG element inside the object
-
-            // Set the fill color to #a1b8c9
-            if (svgElement) {
-                const paths = svgElement.querySelectorAll('path');
-                paths.forEach(path => {
-                    path.setAttribute('fill', '#a1b8c9'); // Set the fill color
-                });
-            }
-        };
-
     </script>
 </body>
 </html>
