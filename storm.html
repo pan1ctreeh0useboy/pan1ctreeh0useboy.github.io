@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>!!!!!!STORM!!!!!</title>
+    <style>
+        body {
+            margin: 0;
+            background-color: #000;
+            overflow: hidden;
+        }
+        canvas {
+            display: block;
+            image-rendering: pixelated; /* Enhances pixelated look */
+        }
+
+        /* Styling the SVG object */
+        #svgContainer {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 200px;  /* Adjust width */
+            height: 200px; /* Adjust height */
+        }
+    </style>
+</head>
+<body>
+    <canvas id="waveCanvas"></canvas>
+
+    <!-- SVG object -->
+    <div id="svgContainer">
+        <object id="svgObject" type="image/svg+xml" data="pth.svg"></object>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('waveCanvas');
+        const ctx = canvas.getContext('2d');
+        const pixelSize = 4; // Same 4x4 pixel blocks as the rough 64x64 version
+
+        const deepColor = '#4f6781';
+        const mildColor = '#afbfd2';
+
+        function hexToRgb(hex) {
+            hex = hex.replace('#', '');
+            return {
+                r: parseInt(hex.substring(0, 2), 16),
+                g: parseInt(hex.substring(2, 4), 16),
+                b: parseInt(hex.substring(4, 6), 16)
+            };
+        }
+
+        const deepRgb = hexToRgb(deepColor);
+        const mildRgb = hexToRgb(mildColor);
+
+        function interpolateColor(t) {
+            const r = Math.floor(deepRgb.r + (mildRgb.r - deepRgb.r) * t);
+            const g = Math.floor(deepRgb.g + (mildRgb.g - deepRgb.g) * t);
+            const b = Math.floor(deepRgb.b + (mildRgb.b - deepRgb.b) * t);
+            return `rgb(${r}, ${g}, ${b})`;
+        }
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            canvas.style.width = window.innerWidth + 'px';
+            canvas.style.height = window.innerHeight + 'px';
+        }
+
+        // Initial resize
+        resizeCanvas();
+
+        // Resize canvas on window resize
+        window.addEventListener('resize', resizeCanvas);
+
+        let time = 0;
+        // 动态修改标签页标题
+        const titles = [
+            "！！！！！！",
+            "风暴！！！！！",
+        ];
+
+        let titleIndex = 0;
+        let titleStep = 0;
+        let isAnimating = false;
+        let intervalId = setInterval(() => {
+            if (isAnimating) {
+                // 动画阶段：显示“◨”逐渐增加
+                document.title = "◨".repeat(titleStep);
+                titleStep++;
+                if (titleStep > 9) {
+                    // 完成动画后恢复到下一个标题
+                    isAnimating = false;
+                    titleStep = 0;
+                    titleIndex = (titleIndex + 1) % titles.length;
+                    document.title = titles[titleIndex];
+                }
+            } else {
+                // 等待下一段标题动画
+                isAnimating = true;
+                titleStep = 1;
+            }
+        }, 200); // 每200ms更新一次标题
+
+        function draw() {
+            const width = canvas.width;
+            const height = canvas.height;
+            const centerX = width / 2; // Always center of viewport
+            const centerY = height / 2;
+
+            ctx.clearRect(0, 0, width, height);
+
+            for (let x = 0; x < width; x += pixelSize) {
+                for (let y = 0; y < height; y += pixelSize) {
+                    const dx = x - centerX;
+                    const dy = y - centerY;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    const angle = Math.atan2(dy, dx);
+                    // Wave parameters scaled for dynamic size
+                    const scaleFactor = Math.max(width, height) / 1920; // Normalize to 1920 baseline
+                    const wave = Math.sin(distance * 0.015 / scaleFactor - time + angle) * 0.5 + 0.5;
+                    const swirl = Math.sin(distance * 0.0075 / scaleFactor + angle + time * 0.4) * 0.5 + 0.5;
+                    const t = Math.floor((wave + swirl) * 1.5) / 2;
+                    ctx.fillStyle = interpolateColor(t);
+                    ctx.fillRect(x, y, pixelSize, pixelSize);
+                }
+            }
+
+            time += 0.05;
+            requestAnimationFrame(draw);
+        }
+
+        draw();
+
+        // Change the color of the SVG after it has loaded
+        const svgObject = document.getElementById('svgObject');
+
+        svgObject.onload = function() {
+            const svgDoc = svgObject.contentDocument;
+            const svgElement = svgDoc.querySelector('svg'); // Select the SVG element inside the object
+
+            // Set the fill color to #a1b8c9
+            if (svgElement) {
+                const paths = svgElement.querySelectorAll('path');
+                paths.forEach(path => {
+                    path.setAttribute('fill', '#a1b8c9'); // Set the fill color
+                });
+            }
+        };
+
+    </script>
+</body>
+</html>
