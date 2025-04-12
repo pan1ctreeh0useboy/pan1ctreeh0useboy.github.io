@@ -9,15 +9,26 @@
             margin: 0;
             background-color: #000;
             overflow: hidden;
+            position: relative; /* Required for absolute positioning of the SVG */
         }
         canvas {
             display: block;
             image-rendering: pixelated; /* Enhances pixelated look */
         }
+        #svgImage {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%); /* Center the SVG */
+            width: 200px; /* You can adjust the size of the SVG here */
+            height: auto;
+        }
     </style>
 </head>
 <body>
     <canvas id="waveCanvas"></canvas>
+    <!-- Add your SVG image in the center -->
+    <img id="svgImage" src="pthp.svg" alt="SVG Image">
 
     <script>
         const canvas = document.getElementById('waveCanvas');
