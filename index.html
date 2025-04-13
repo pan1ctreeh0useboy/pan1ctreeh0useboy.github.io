@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Random Green Pixels</title>
+    <title>Treeh0se</title>
     <style>
         body {
             margin: 0;
@@ -10,15 +10,20 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
+            position: relative; /* 用于定位子元素 */
+            overflow: hidden; /* 防止内容溢出视口 */
         }
         
         #canvas {
-            width: 1920px;
-            height: 1080px;
             display: grid;
-            grid-template-columns: repeat(64, 30px); /* 1920/30 = 64列 */
-            grid-template-rows: repeat(36, 30px);   /* 1080/30 = 36行 */
+            grid-template-columns: repeat(auto-fill, minmax(30px, 1fr)); /* 自动适配列数 */
+            grid-template-rows: repeat(auto-fill, minmax(30px, 1fr)); /* 自动适配行数 */
             gap: 0;
+            width: 100vw; /* 宽度适应视口 */
+            height: 100vh; /* 高度适应视口 */
+            position: absolute; /* 将其放置在 body 内部 */
+            top: 0;
+            left: 0;
         }
 
         .pixel {
@@ -30,17 +35,30 @@
         .green {
             background-color: #66D300; /* 绿色改为66D300 */
         }
+
+        img {
+            position: absolute; /* 将 SVG 图像定位在页面中心 */
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%); /* 使图像在水平和垂直方向居中 */
+            z-index: 10; /* 确保 SVG 图像在最上层 */
+            width: 200px;  /* 保持原始宽度 */
+            height: auto; /* 保持原始高度 */
+        }
     </style>
 </head>
 <body>
+    <canvas id="waveCanvas"></canvas>
+    <!-- Add the SVG image with absolute positioning -->
+    <img src="pth.svg" alt="SVG Image">
     <div id="canvas"></div>
 
     <script>
         // 获取canvas容器
         const canvas = document.getElementById('canvas');
         
-        // 创建网格（64 × 36 = 2304个像素块）
-        const totalPixels = 64 * 36;
+        // 创建网格（自动根据视口大小生成像素块）
+        const totalPixels = Math.floor(window.innerWidth / 30) * Math.floor(window.innerHeight / 30); // 根据视口宽高计算总像素块数
         for (let i = 0; i < totalPixels; i++) {
             const pixel = document.createElement('div');
             pixel.className = 'pixel';
@@ -67,6 +85,37 @@
 
         // 每0.25秒更新一次
         setInterval(generateNoise, 250);
+
+        // 动态修改标签页标题
+        const titles = [
+            "GOAWAY！",
+            "！！！！！！",
+            "111111111111111111",
+            "走开！！！！！",
+        ];
+
+        let titleIndex = 0;
+        let titleStep = 0;
+        let isAnimating = false;
+        let intervalId = setInterval(() => {
+            if (isAnimating) {
+                // 动画阶段：显示“◨”逐渐增加
+                document.title = "◨".repeat(titleStep);
+                titleStep++;
+                if (titleStep > 9) {
+                    // 完成动画后恢复到下一个标题
+                    isAnimating = false;
+                    titleStep = 0;
+                    titleIndex = (titleIndex + 1) % titles.length;
+                    document.title = titles[titleIndex];
+                }
+            } else {
+                // 等待下一段标题动画
+                isAnimating = true;
+                titleStep = 1;
+            }
+        }, 200); // 每200ms更新一次标题
+
     </script>
 </body>
 </html>
