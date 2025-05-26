@@ -1,121 +1,271 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Treeh0se</title>
-    <style>
-        body {
-            margin: 0;
-            background-color: #FFBB00; /* 黄色改为FFBB00 */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            position: relative; /* 用于定位子元素 */
-            overflow: hidden; /* 防止内容溢出视口 */
-        }
-        
-        #canvas {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(30px, 1fr)); /* 自动适配列数 */
-            grid-template-rows: repeat(auto-fill, minmax(30px, 1fr)); /* 自动适配行数 */
-            gap: 0;
-            width: 100vw; /* 宽度适应视口 */
-            height: 100vh; /* 高度适应视口 */
-            position: absolute; /* 将其放置在 body 内部 */
-            top: 0;
-            left: 0;
-        }
+  <meta charset="UTF-8">
+  <title>缩放画布辅助线系统</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background-color: black;
+      height: 100%;
+      overflow: hidden;
+    }
 
-        .pixel {
-            width: 30px;
-            height: 30px;
-            background-color: transparent;
-        }
+    .margin-box {
+      position: fixed;
+      top: 32px;
+      left: 32px;
+      right: 32px;
+      bottom: 32px;
+      border: 2px solid transparent;
+      pointer-events: none;
+      z-index: 10;
+      box-sizing: border-box;
+    }
 
-        .green {
-            background-color: #66D300; /* 绿色改为66D300 */
-        }
+    @import url('https://fonts.googleapis.com/css2?family=Inconsolata&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Times+New+Roman&display=swap');
 
-        img {
-            position: absolute; /* 将 SVG 图像定位在页面中心 */
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%); /* 使图像在水平和垂直方向居中 */
-            z-index: 10; /* 确保 SVG 图像在最上层 */
-            width: 200px;  /* 保持原始宽度 */
-            height: auto; /* 保持原始高度 */
-        }
-    </style>
+    #fixed-labels {
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 2000;
+        pointer-events: auto;
+        font-family: 'Inconsolata', monospace;
+    }
+
+    .fixed-text {
+        position: absolute;
+        font-size: 0.7vw;
+        color: white;
+        white-space: nowrap;
+        text-align: left;
+        line-height: 0.6vw;
+    }
+
+    .text-style-1-2 {
+        font-family: 'Times New Roman', serif;
+        font-size: 0.5vw;
+        color: white;
+        font-style: italic;
+        line-height: 0.4vw;
+    }
+
+    .text-style-3-4-5 {
+        font-family: 'Times New Roman', serif;
+        font-size: 1.0vw;
+        color: white;
+        font-style: italic;
+        line-height: 0.9vw;
+    }
+
+    .guide {
+      position: fixed;
+      background-color: transparent;
+      z-index: 5;
+      pointer-events: none;
+    }
+
+    .h-line {
+      width: 100vw;
+      height: 1px;
+    }
+
+    .v-line {
+      height: 100vh;
+      width: 1px;
+    }
+
+    .inner-margin {
+      position: absolute;
+      top: 32px;
+      bottom: 32px;
+      left: 32px;
+      right: 32px;
+      border: 2px solid transparent;
+      pointer-events: none;
+      box-sizing: border-box;
+    }
+
+    .center-box {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      height: 100vh;
+      aspect-ratio: 16 / 9;
+      background-color: transparent;
+      border: 2px solid white;
+      z-index: 1000;
+      box-sizing: border-box;
+      pointer-events: none;
+    }
+
+    /* hover高亮背景 */
+    .hover-blue a:hover {
+      background-color: rgb(0, 0, 255);
+    }
+
+    a {
+      color: white;
+      text-decoration: none;
+    }
+  </style>
 </head>
 <body>
-    <canvas id="waveCanvas"></canvas>
-    <!-- Add the SVG image with absolute positioning -->
-    <img src="pth.svg" alt="SVG Image">
-    <div id="canvas"></div>
 
-    <script>
-        // 获取canvas容器
-        const canvas = document.getElementById('canvas');
-        
-        // 创建网格（自动根据视口大小生成像素块）
-        const totalPixels = Math.floor(window.innerWidth / 30) * Math.floor(window.innerHeight / 30); // 根据视口宽高计算总像素块数
-        for (let i = 0; i < totalPixels; i++) {
-            const pixel = document.createElement('div');
-            pixel.className = 'pixel';
-            canvas.appendChild(pixel);
+  <div class="margin-box"></div>
+
+  <div class="center-box">
+    <div class="inner-margin"></div>
+  </div>  
+
+  <script>
+    const designWidth = 1920;
+    const designHeight = 1080;
+
+    const horizontalLines = [364.1, 540, 694.4, 800, 943.8, 1000];
+    const verticalLines = [66,404.7, 745.6, 810, 960, 1161, 1356, 1850]; 
+
+    function clearGuides() {
+      document.querySelectorAll('.guide').forEach(el => el.remove());
+    }
+
+    function addGuide(type, pos) {
+      const guide = document.createElement('div');
+      guide.classList.add('guide', type === 'h' ? 'h-line' : 'v-line');
+      guide.style[type === 'h' ? 'top' : 'left'] = pos + 'px';
+      document.body.appendChild(guide);
+    }
+
+    function updateLayout() {
+      const vpWidth = window.innerWidth;
+      const vpHeight = window.innerHeight;
+
+      const scale = vpHeight / designHeight;
+      const canvasWidth = designWidth * scale;
+      const offsetX = (vpWidth - canvasWidth) / 2;
+
+      clearGuides();
+
+      horizontalLines.forEach(originalY => {
+        const y = originalY * scale;
+        addGuide('h', y);
+      });
+
+      verticalLines.forEach(originalX => {
+        const x = originalX * scale + offsetX;
+        addGuide('v', x);
+      });
+
+      updateTextLabels(scale, offsetX);
+      updateImageLayers(scale, offsetX);
+    }
+
+    function updateImageLayers(scale, offsetX) {
+        const stone = document.getElementById('stone-img');
+        const door = document.getElementById('door-img');
+        const rightdown = document.getElementById('rightdown-img');
+        const chipcode = document.getElementById('chipcode-img');
+
+        const centerBox = document.querySelector('.center-box');
+        const centerBoxRect = centerBox.getBoundingClientRect();
+
+        stone.style.left = (centerBoxRect.left + 32) + 'px';
+        stone.style.top = (centerBoxRect.top + 32) + 'px';
+        stone.style.width = (404.7 * scale + offsetX - (centerBoxRect.left + 32)) + 'px';
+        stone.style.height = (540 * scale - (centerBoxRect.top + 32)) + 'px';
+
+        door.style.left = (404.7 * scale + offsetX) + 'px';
+        door.style.top = '32px';
+        door.style.width = (810 * scale + offsetX - (404.7 * scale + offsetX)) + 'px';
+        door.style.height = (540 * scale - 32) + 'px';
+
+        rightdown.style.left = (1161 * scale + offsetX) + 'px';
+        rightdown.style.top = (800 * scale) + 'px';
+        rightdown.style.width = (1850 * scale + offsetX - (1161 * scale + offsetX)) + 'px';
+        rightdown.style.height = (centerBoxRect.bottom - 32 - (800 * scale)) + 'px';
+
+        chipcode.style.left = (66 * scale + offsetX) + 'px';
+        chipcode.style.top = (694.4 * scale) + 'px';
+        chipcode.style.width = (745.6 * scale + offsetX - (66 * scale + offsetX)) + 'px';
+        chipcode.style.height = (943.8 * scale - 694.4 * scale) + 'px';
+    }
+
+    function addTextLabel(text, anchorX, anchorY, scale, offsetX, extraClass = '') {
+        const label = document.createElement('div');
+        label.classList.add('fixed-text');
+        if (extraClass) label.classList.add(extraClass);
+
+        const x = anchorX * scale + offsetX;
+        const y = anchorY * scale;
+        label.style.left = x + 'px';
+        label.style.top = y + 'px';
+
+        if (text === "ENTER L0BBY") {
+          label.classList.add("hover-blue");
+          label.innerHTML = `<a href="https://pan1ctreeh0useboy.github.io/storm.html">${text}</a>`;
+        } else if (text === "About<br>Project<br>Photography<br>Music Room") {
+          label.classList.add("hover-blue");
+          label.innerHTML = `About<br><a href="https://pan1ctreeh0useboy.github.io/projects.html">Project</a><br><a href="https://pan1ctreeh0useboy.github.io/photography.html">Photography</a><br><a href="https://pan1ctreeh0useboy.github.io/whatilove.html">Music Room</a>`;
+        } else if (text === "FIND<br>Instagram<br>Mail") {
+          label.classList.add("hover-blue");
+          label.innerHTML = `FIND<br><a href="https://www.instagram.com/panictreehouseboi/">Instagram</a><br><a href="mailto:ihavetopickle@gmail.com">Mail</a>`;
+        } else {
+          label.innerHTML = text;
         }
 
-        // 获取所有像素块
-        const pixels = document.getElementsByClassName('pixel');
+        document.getElementById('fixed-labels').appendChild(label);
+    }
 
-        // 随机生成绿色像素的函数
-        function generateNoise() {
-            for (let pixel of pixels) {
-                // 随机决定是否变成绿色（这里使用30%的概率）
-                if (Math.random() < 0.3) {
-                    pixel.classList.add('green');
-                } else {
-                    pixel.classList.remove('green');
-                }
-            }
-        }
+    function updateTextLabels(scale, offsetX) {
+        const labelsContainer = document.getElementById('fixed-labels');
+        labelsContainer.innerHTML = '';
 
-        // 初始生成
-        generateNoise();
+        const firstVerticalX = 42;
+        const firstVerticalXfix = 45;
+        const secondVerticalX = 404.7;
+        const thirdVerticalX = 960;
+        const forthVerticalX = 1160;
+        const fifthVerticalX = 1356;
+        const topMarginY = 32;
+        const topMarginYfix = 35;
+        const hLine1Y = 364.1;
+        const hLine2Y = 540;
+        const hLine2Yfix = 543;
+        const hLine3Y = 800;
+        const hLine4Y = 1000;
+        const hbottomfix = 1025;
+        const hbottomfix2 = 1012;   
+        const hbottomfix3 = 999;
+        const hbottomfix4 = 986;
+        const hbottomfix5 = 973;
 
-        // 每0.25秒更新一次
-        setInterval(generateNoise, 250);
+        addTextLabel("ENTER L0BBY", thirdVerticalX, topMarginYfix, scale, offsetX);
+        addTextLabel("About<br>Project<br>Photography<br>Music Room", thirdVerticalX, hLine1Y, scale, offsetX);
+        addTextLabel("FIND<br>Instagram<br>Mail", thirdVerticalX, hLine2Y, scale, offsetX);
+        addTextLabel("3*", forthVerticalX, hLine3Y, scale, offsetX, 'text-style-3-4-5');
+        addTextLabel("4,5*", fifthVerticalX, hLine3Y, scale, offsetX, 'text-style-3-4-5');
+        addTextLabel("2*", secondVerticalX, hLine2Yfix, scale, offsetX, 'text-style-1-2');
+        addTextLabel("1*", firstVerticalX, hLine2Yfix, scale, offsetX, 'text-style-1-2');
+        addTextLabel("<sup>4,5</sup>©Panictreehouseboy, all rights reserved.", firstVerticalXfix, hbottomfix, scale, offsetX, 'text-style-1-2');
+        addTextLabel("<sup>3</sup>By Random user 39849958, Wikipedia, Outline-body-aura", firstVerticalXfix, hbottomfix2, scale, offsetX, 'text-style-1-2');
+        addTextLabel("<sup>2</sup>©U+2117 Excitement Fun Zone & MKULTRA Entertainment 2018 - 2020, from 'R3ab69JN', at Pelzer, South Carolina, USA (34°39'03.3\"N 82°27'36.8\"W)", firstVerticalXfix, hbottomfix3, scale, offsetX, 'text-style-1-2');
+        addTextLabel("<sup>1</sup>©Bill Casselman, from Wikipedia \"Ybc7289-bw\", CC BY-SA 3.0", firstVerticalXfix, hbottomfix4, scale, offsetX, 'text-style-1-2');
+    }
 
-        // 动态修改标签页标题
-        const titles = [
-            "GOAWAY！",
-            "！！！！！！",
-            "111111111111111111",
-            "走开！！！！！",
-        ];
+    window.addEventListener('resize', updateLayout);
+    window.addEventListener('load', updateLayout);
+  </script>
 
-        let titleIndex = 0;
-        let titleStep = 0;
-        let isAnimating = false;
-        let intervalId = setInterval(() => {
-            if (isAnimating) {
-                // 动画阶段：显示“◨”逐渐增加
-                document.title = "◨".repeat(titleStep);
-                titleStep++;
-                if (titleStep > 9) {
-                    // 完成动画后恢复到下一个标题
-                    isAnimating = false;
-                    titleStep = 0;
-                    titleIndex = (titleIndex + 1) % titles.length;
-                    document.title = titles[titleIndex];
-                }
-            } else {
-                // 等待下一段标题动画
-                isAnimating = true;
-                titleStep = 1;
-            }
-        }, 200); // 每200ms更新一次标题
-
-    </script>
+  <div id="image-layers" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 1500;">
+    <img id="stone-img" src="stone.png" style="position: absolute; object-fit: cover; width: 0; height: 0;" alt="Stone Image">
+    <img id="door-img" src="door.png" style="position: absolute; object-fit: cover; width: 0; height: 0;" alt="Door Image">
+    <img id="rightdown-img" src="rightdown.svg" style="position: absolute; object-fit: cover; width: 0; height: 0;" alt="RightDown Image">
+    <img id="chipcode-img" src="chipcode.svg" style="position: absolute; object-fit: cover; width: 0; height: 0;" alt="Chipcode Image">
+  </div>
+  <div id="fixed-labels"></div>
 </body>
 </html>
