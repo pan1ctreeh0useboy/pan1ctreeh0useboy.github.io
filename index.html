@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Panictreehouse?</title>
+  <title>!Panictreehouse!</title>
   <style>
     html, body {
       margin: 0;
@@ -47,7 +47,7 @@
 
     .text-style-1-2 {
         font-family: 'Times New Roman', serif;
-        font-size: 0.5vw;
+        font-size: 0.517vw;
         color: white;
         font-style: italic;
         line-height: 0.4vw;
@@ -127,7 +127,7 @@
     const designHeight = 1080;
 
     const horizontalLines = [364.1, 540, 694.4, 800, 943.8, 1000];
-    const verticalLines = [66,404.7, 745.6, 810, 960, 1161, 1356, 1850]; 
+    const verticalLines = [66,404.7, 745.6, 810, 960, 1055.3, 1161, 1356, 1850]; 
 
     function clearGuides() {
       document.querySelectorAll('.guide').forEach(el => el.remove());
@@ -180,7 +180,7 @@
 
         door.style.left = (404.7 * scale + offsetX) + 'px';
         door.style.top = '32px';
-        door.style.width = (810 * scale + offsetX - (404.7 * scale + offsetX)) + 'px';
+        door.style.width = (1055.3 * scale + offsetX - (404.7 * scale + offsetX)) + 'px';
         door.style.height = (540 * scale - 32) + 'px';
 
         rightdown.style.left = (1161 * scale + offsetX) + 'px';
@@ -244,7 +244,7 @@
         const hbottomfix5 = 973;
 
         addTextLabel("ENTER L0BBY", thirdVerticalX, topMarginYfix, scale, offsetX);
-        addTextLabel("About<br>Projects<br>Photography<br>Music Room", thirdVerticalX, hLine1Y, scale, offsetX);
+        addTextLabel("ABOUT<br>Project<br>Photography<br>Music Room", thirdVerticalX, hLine1Y, scale, offsetX);
         addTextLabel("FIND<br>Instagram<br>Mail", thirdVerticalX, hLine2Y, scale, offsetX);
         addTextLabel("3*", forthVerticalX, hLine3Y, scale, offsetX, 'text-style-3-4-5');
         addTextLabel("4,5*", fifthVerticalX, hLine3Y, scale, offsetX, 'text-style-3-4-5');
