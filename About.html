@@ -56,11 +56,12 @@
 
     /* Back hover 效果 */
     .back:hover {
-      color: #fff;                 /* 文字白色 */
-      background-color: blue; /* 蓝底 */
-      text-decoration: none;       /* hover 时无下划线 */
+      color: #fff;                 
+      background-color: blue; 
+      text-decoration: none;       
       cursor: pointer;
     }
+
     /* 红色参考线（按 16:9 矩形相对位置） */
     .h-line {
       position: absolute;
@@ -84,10 +85,9 @@
     /* 焦点文字组修改为 fixed-text */
     .fixed-text {
       position: absolute;
-      top: calc(128.3 / 1080 * 100%);        /* 与红色水平线 y 相同 -> 上边缘压紧该线 */
-      left: calc(93.1 / 1920 * 100%);       /* 与红色垂直线 x 相同 -> 左边缘在垂直线处（右侧起点） */
-
-      z-index: 2;                            /* 文字盖在红线之上，若需看见线可降 z-index */
+      top: calc(128.3 / 1080 * 100%);
+      left: calc(93.1 / 1920 * 100%);
+      z-index: 2;
       font-family: 'Inconsolata', monospace;
       font-size: 0.7vw;
       line-height: 0.6vw;
@@ -95,33 +95,29 @@
       white-space: nowrap;
       text-align: left;
       background: transparent;
-      padding-left: 0;                       /* 如需与垂直线有间距可改此处 */
+      padding-left: 0;
       margin: 0;
+      max-width: calc(100% - calc(93.1 / 1920 * 100%) - 32px);
     }
 
-    /* 可选：限制最大宽度，避免超出框体 */
-    .fixed-text { max-width: calc(100% - calc(93.1 / 1920 * 100%) - 32px); }
-
-    /* 小屏调整（必要时） */
+    /* 小屏调整 */
     @media (max-width: 500px) {
       .fixed-text { font-size: 1.6vw; line-height: 1.3vw; }
     }
 
-    /* GIF 元素：位于文本正下方，紧贴垂直参考线右侧内侧（左边缘紧贴垂直线） */
+    /* GIF 元素：位于文本正下方 */
     .gif-element {
       position: absolute;
-      top: calc((130.3 / 1080) * 100vh + 1.2vw); /* 高度相对视口 */
-      left: calc((93.1 / 1920) * 100vw);        /* 左边相对视口宽 */
-      width: calc(1920 * 0.61 / 1920 * 100vw);  /* 按原比例计算宽度 */
-      height: auto;                             /* 高度自适应 */
+      top: calc((130.3 / 1080) * 100vh + 1.2vw);
+      left: calc((93.1 / 1920) * 100vw);
       z-index: 2;
       background: transparent;
     }
 
-
     .gif-element img {
       display: block;
-      max-width: 100%;  /* 防止溢出，可根据需要调整大小 */
+      max-width: 100%;
+      height: auto;
     }
   </style>
 </head>
@@ -134,11 +130,10 @@
     <div class="h-line"></div>
     <div class="v-line"></div>
 
-    <!-- 焦点文字组：上边缘压紧红色水平线，位于垂直线右侧起点 -->
-    <!-- Trivial modification: added this comment to change the code without affecting display -->
+    <!-- 焦点文字组 -->
     <div class="fixed-text">
-Motion design/Graphic Design/VFX<br>
-The only way you can learn about me is by engaging with my works.
+      Motion design/Graphic Design/VFX<br>
+      The only way you can learn about me is by engaging with my works.
     </div>
 
     <!-- GIF 元素 -->
@@ -146,5 +141,34 @@ The only way you can learn about me is by engaging with my works.
       <img src="l05.gif" alt="Animated GIF">
     </div>
   </div>
+
+  <script>
+    function resizeGifToText() {
+      const textEl = document.querySelector('.fixed-text');
+      const gifImg = document.querySelector('.gif-element img');
+
+      // 获取文本行的实际渲染宽度
+      const lines = textEl.innerHTML.split('<br>');
+      let targetLine = lines[1]; // 第二行
+      // 创建隐藏临时元素测量宽度
+      const temp = document.createElement('span');
+      temp.style.fontFamily = window.getComputedStyle(textEl).fontFamily;
+      temp.style.fontSize = window.getComputedStyle(textEl).fontSize;
+      temp.style.position = 'absolute';
+      temp.style.visibility = 'hidden';
+      temp.style.whiteSpace = 'nowrap';
+      temp.innerText = targetLine;
+      document.body.appendChild(temp);
+      const textWidth = temp.getBoundingClientRect().width;
+      document.body.removeChild(temp);
+
+      // 设置 GIF 宽度与文本宽度一致
+      gifImg.style.width = textWidth + 'px';
+      gifImg.style.height = 'auto'; // 保持比例
+    }
+
+    window.addEventListener('load', resizeGifToText);
+    window.addEventListener('resize', resizeGifToText);
+  </script>
 </body>
 </html>
