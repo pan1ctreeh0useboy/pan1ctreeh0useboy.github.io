@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Text Top Aligned to H-line</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inconsolata&display=swap');
+
+    html, body {
+      height: 100%;
+      margin: 0;
+      background: #000;
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    /* 外框（16:9，高 = 100vh）*/
+    .frame {
+      height: 100vh;
+      width: calc(100vh * 16 / 9);
+      box-sizing: border-box;
+      border: 2px solid transparent;
+      position: relative;
+      background: transparent;
+      overflow: hidden;
+    }
+
+    /* 内侧 32px 边距线 */
+    .frame::after {
+      content: "";
+      position: absolute;
+      top: 32px;
+      left: 32px;
+      right: 32px;
+      bottom: 32px;
+      border: 1px solid transparent;
+      pointer-events: none;
+    }
+
+    /* About / Back 文本（压线） */
+    .label {
+      position: absolute;
+      font-family: 'Inconsolata', monospace;
+      font-size: 0.7vw;
+      line-height: 0.6vw;
+      color: #fff;
+      white-space: nowrap;
+    }
+    .about { top: 32px; left: 32px; }
+    .back  { top: 32px; right: 32px; text-decoration:  none;}
+
+    /* Back hover 效果 */
+    .back:hover {
+      color: #fff;                 /* 文字白色 */
+      background-color: blue; /* 蓝底 */
+      text-decoration: none;       /* hover 时无下划线 */
+      cursor: pointer;
+    }
+    /* 红色参考线（按 16:9 矩形相对位置） */
+    .h-line {
+      position: absolute;
+      top: calc(128.3 / 1080 * 100%);
+      left: 0;
+      width: 100%;
+      height: 1px;
+      background: transparent;
+      z-index: 1;
+    }
+    .v-line {
+      position: absolute;
+      left: calc(93.1 / 1920 * 100%);
+      top: 0;
+      width: 1px;
+      height: 100%;
+      background: transparent;
+      z-index: 1;
+    }
+
+    /* 焦点文字组修改为 fixed-text */
+    .fixed-text {
+      position: absolute;
+      top: calc(128.3 / 1080 * 100%);        /* 与红色水平线 y 相同 -> 上边缘压紧该线 */
+      left: calc(93.1 / 1920 * 100%);       /* 与红色垂直线 x 相同 -> 左边缘在垂直线处（右侧起点） */
+
+      z-index: 2;                            /* 文字盖在红线之上，若需看见线可降 z-index */
+      font-family: 'Inconsolata', monospace;
+      font-size: 0.7vw;
+      line-height: 0.6vw;
+      color: white;
+      white-space: nowrap;
+      text-align: left;
+      background: transparent;
+      padding-left: 0;                       /* 如需与垂直线有间距可改此处 */
+      margin: 0;
+    }
+
+    /* 可选：限制最大宽度，避免超出框体 */
+    .fixed-text { max-width: calc(100% - calc(93.1 / 1920 * 100%) - 32px); }
+
+    /* 小屏调整（必要时） */
+    @media (max-width: 500px) {
+      .fixed-text { font-size: 1.6vw; line-height: 1.3vw; }
+    }
+
+    /* GIF 元素：位于文本正下方，紧贴垂直参考线右侧内侧（左边缘紧贴垂直线） */
+    .gif-element {
+      position: absolute;
+      top: calc(calc(130.3 / 1080 * 100%) + 1.2vw);  /* 调整为新 line-height * 2 */
+      left: calc(93.1 / 1920 * 100%);  /* 左边缘位于垂直线位置 */
+      z-index: 2;
+      background: transparent;
+      transform: scale(0.61);  /* 放大五倍 */
+      transform-origin: top left;  /* 从左上角缩放，以保持位置 */
+    }
+
+    .gif-element img {
+      display: block;
+      max-width: 100%;  /* 防止溢出，可根据需要调整大小 */
+    }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <div class="label about">About</div>
+    <a class="label back" href="https://pan1ctreeh0useboy.github.io/">Back</a>
+
+    <!-- 红色参考线 -->
+    <div class="h-line"></div>
+    <div class="v-line"></div>
+
+    <!-- 焦点文字组：上边缘压紧红色水平线，位于垂直线右侧起点 -->
+    <!-- Trivial modification: added this comment to change the code without affecting display -->
+    <div class="fixed-text">
+Motion design/Graphic Design/VFX<br>
+The only way you can learn about me is by engaging with my works.
+    </div>
+
+    <!-- GIF 元素 -->
+    <div class="gif-element">
+      <img src="l05.gif" alt="Animated GIF">
+    </div>
+  </div>
+</body>
+</html>
