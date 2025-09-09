@@ -110,13 +110,14 @@
     /* GIF 元素：位于文本正下方，紧贴垂直参考线右侧内侧（左边缘紧贴垂直线） */
     .gif-element {
       position: absolute;
-      top: calc(calc(130.3 / 1080 * 100%) + 1.2vw);  /* 调整为新 line-height * 2 */
-      left: calc(93.1 / 1920 * 100%);  /* 左边缘位于垂直线位置 */
+      top: calc((130.3 / 1080) * 100vh + 1.2vw); /* 高度相对视口 */
+      left: calc((93.1 / 1920) * 100vw);        /* 左边相对视口宽 */
+      width: calc(1920 * 0.61 / 1920 * 100vw);  /* 按原比例计算宽度 */
+      height: auto;                             /* 高度自适应 */
       z-index: 2;
       background: transparent;
-      transform: scale(0.61);  /* 放大五倍 */
-      transform-origin: top left;  /* 从左上角缩放，以保持位置 */
     }
+
 
     .gif-element img {
       display: block;
