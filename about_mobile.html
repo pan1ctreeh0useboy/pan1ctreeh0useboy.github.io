@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <title>ENTER L0BBY</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: black;
+    }
+
+    .wrap {
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .box {
+      width: 80vw;
+      height: 80vh;
+      position: relative;
+      background: transparent;
+    }
+
+    .label {
+      position: absolute;
+      top: 0;
+      left: 0;
+      font-family: 'Inconsolata', monospace;
+      font-size: 16pt;
+      line-height: 16pt;
+      color: #fff;
+      white-space: nowrap;
+    }
+
+    .label div:last-child {
+      white-space: normal;
+      max-width: 80vw;
+      color: #fff;
+      padding: 2px 0;
+    }
+
+    .label div:nth-child(1) { margin-bottom: 11.2pt; }
+    .label div:nth-child(2) { margin-bottom: 13.6pt; }
+
+    .back-link {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      font-family: 'Inconsolata', monospace;
+      font-size: 16pt;
+      color: #fff;
+      text-decoration: none;
+    }
+    .back-link:hover { text-decoration: underline; }
+
+    .gif-container {
+      position: absolute;
+      left: 0;
+      height: 14pt; /* 固定高度 */
+      overflow: hidden; /* 防止图片超出容器 */
+    }
+    .gif-container img {
+      height: 100%; /* 高度固定 */
+      width: 100%;  /* 宽度随容器调整 */
+      display: block;
+      object-fit: fill; /* 强制拉伸宽度 */
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="box">
+      <div class="label">
+        <div>ABOUT</div>
+        <div>Motion design/Graphic design</div>
+        <div>The only way you can learn about me is by engaging with my works.</div>
+      </div>
+      <a class="back-link" href="#">Back</a>
+      <div class="gif-container">
+        <img src="l05.gif" alt="l05 animation" />
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function adjustGifWidth() {
+      const textDiv = document.querySelector('.label div:last-child');
+      const gifContainer = document.querySelector('.gif-container');
+
+      // 获取文本最后一行的宽度
+      const range = document.createRange();
+      const textNode = Array.from(textDiv.childNodes).find(n => n.nodeType === Node.TEXT_NODE);
+      if (!textNode) return;
+
+      range.selectNodeContents(textNode);
+      const rects = range.getClientRects();
+      if (!rects.length) return;
+
+      const lastRect = rects[rects.length - 1];
+      const lastLineWidth = lastRect.width;
+
+      // 设置 GIF 宽度为最后一行宽度
+      gifContainer.style.width = `${lastLineWidth}px`;
+
+      // 设置 GIF 顶部位置在文本底部
+      const boxRect = document.querySelector('.box').getBoundingClientRect();
+      const textBottom = textDiv.getBoundingClientRect().bottom - boxRect.top;
+      gifContainer.style.top = `${textBottom}px`;
+    }
+
+    window.addEventListener('load', adjustGifWidth);
+    window.addEventListener('resize', adjustGifWidth);
+  </script>
+</body>
+</html>
