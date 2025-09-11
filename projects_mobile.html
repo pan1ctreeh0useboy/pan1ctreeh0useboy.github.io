@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <title>ENTER L0BBY</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: black;
+      font-family: 'Inconsolata', monospace;
+      color: #fff;
+    }
+
+    .wrap {
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding-top: 20pt;
+    }
+
+    .box {
+      width: 80vw;
+      position: relative;
+      background: transparent;
+    }
+
+    .label {
+      font-size: 16pt;
+      line-height: 16pt;
+      margin-bottom: 12pt;
+    }
+
+    .meta {
+      margin-left: 0;
+      margin-bottom: 6pt;
+      font-size: 12pt;
+    }
+
+    /* 滑动区域 */
+    .slider {
+      margin-top: 52.4pt;
+      display: flex;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      gap: 24pt;
+      padding-bottom: 12pt;
+    }
+
+    .slide {
+      flex: 0 0 auto;
+      width: 240pt;
+      height: 140pt;
+      background: transparent;
+      display: flex;
+      align-items: flex-start;
+      scroll-snap-align: start;
+      border: 1px solid transparent;
+      position: relative;
+      padding-top: 0pt;
+    }
+
+    .vertical-text {
+      writing-mode: vertical-rl;
+      transform: rotate(360deg);
+      font-family: 'Times New Roman', Times, serif;
+      font-style: italic;
+      font-size: 10pt;
+      letter-spacing: 0pt;
+      padding: 4pt;
+      white-space: nowrap;
+      color: #fff;
+      margin-right: 0pt;
+    }
+
+    .color-block {
+      flex: 1;
+      height: 100%;
+      background: #62ff00;
+    }
+
+    /* Behance 图标 */
+    .behance-icon {
+      margin-top: 67pt;
+      height: 13.8pt;
+      width: auto;
+    }
+    .behance-icon img {
+      height: 100%;
+      width: auto;
+      display: block;
+    }
+
+    /* Vimeo 图标 */
+    .vimeo-icon {
+      margin-top: 38.4pt;
+      height: 19.1pt;
+      width: auto;
+    }
+    .vimeo-icon img {
+      height: 100%;
+      width: auto;
+      display: block;
+    }
+
+    /* YouTube 图标 */
+    .youtube-icon {
+      margin-top: 55.1pt;
+      height: 16.6pt;
+      width: auto;
+    }
+    .youtube-icon img {
+      height: 100%;
+      width: auto;
+      display: block;
+    }
+
+    /* Bilibili 图标 */
+    .bilibili-icon {
+      margin-top: 50.4pt; /* YouTube 下方 50.4pt */
+      height: 25.3pt;     /* 高度缩放到 25.3pt */
+      width: auto;        /* 等比例缩放 */
+    }
+    .bilibili-icon img {
+      height: 100%;
+      width: auto;
+      display: block;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="box">
+      <div class="label">PROJECTS</div>
+      <div class="meta">Project_title</div>
+      <div class="meta">Time</div>
+      <div class="meta">Role</div>
+
+      <!-- 滑动内容 -->
+      <div class="slider">
+        <div class="slide">
+          <div class="vertical-text">fig.1 "the amberfire"</div>
+          <div class="color-block"></div>
+        </div>
+        <div class="slide">
+          <div class="vertical-text">fig.2 "the amberfire"</div>
+          <div class="color-block"></div>
+        </div>
+        <div class="slide">
+          <div class="vertical-text">fig.3 "the amberfire"</div>
+          <div class="color-block"></div>
+        </div>
+      </div>
+
+      <!-- Behance 图标 -->
+      <div class="behance-icon">
+        <img src="behance.svg" alt="Behance">
+      </div>
+
+      <!-- Vimeo 图标 -->
+      <div class="vimeo-icon">
+        <img src="vimeo.svg" alt="Vimeo">
+      </div>
+
+      <!-- YouTube 图标 -->
+      <div class="youtube-icon">
+        <img src="youtube.svg" alt="YouTube">
+      </div>
+
+      <!-- Bilibili 图标 -->
+      <div class="bilibili-icon">
+        <img src="bilibili.svg" alt="Bilibili">
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>
