@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
-  <title>ENTER L0BBY</title>
+  <title>!Projects!</title>
   <style>
     html, body {
       margin: 0;
@@ -40,7 +40,7 @@
       font-size: 12pt;
     }
 
-    /* 滑动区域 */
+    /* 滑动区域，隐藏滚动条 */
     .slider {
       margin-top: 52.4pt;
       display: flex;
@@ -49,6 +49,12 @@
       -webkit-overflow-scrolling: touch;
       gap: 24pt;
       padding-bottom: 12pt;
+
+      scrollbar-width: none; /* Firefox */
+      -ms-overflow-style: none; /* IE 10+ */
+    }
+    .slider::-webkit-scrollbar {
+      display: none; /* Chrome, Safari, Opera */
     }
 
     .slide {
@@ -121,9 +127,9 @@
 
     /* Bilibili 图标 */
     .bilibili-icon {
-      margin-top: 50.4pt; /* YouTube 下方 50.4pt */
-      height: 25.3pt;     /* 高度缩放到 25.3pt */
-      width: auto;        /* 等比例缩放 */
+      margin-top: 50.4pt;
+      height: 25.3pt;
+      width: auto;
     }
     .bilibili-icon img {
       height: 100%;
@@ -136,7 +142,7 @@
 <body>
   <div class="wrap">
     <div class="box">
-      <div class="label">PROJECTS</div>
+      <div class="label">Projects</div>
       <div class="meta">Project_title</div>
       <div class="meta">Time</div>
       <div class="meta">Role</div>
