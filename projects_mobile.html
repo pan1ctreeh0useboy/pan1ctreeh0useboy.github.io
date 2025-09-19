@@ -59,15 +59,13 @@
 
     .slide {
       flex: 0 0 auto;
-      width: 240pt;
-      height: 140pt;
-      background: transparent;
+      width: 80vw;   /* 整个slide宽度 = 80vw */
       display: flex;
       align-items: flex-start;
       scroll-snap-align: start;
       border: 1px solid transparent;
       position: relative;
-      padding-top: 0pt;
+      background: transparent;
     }
 
     .vertical-text {
@@ -80,13 +78,14 @@
       padding: 4pt;
       white-space: nowrap;
       color: #fff;
-      margin-right: 0pt;
+      margin-right: 4pt;
     }
 
-    .color-block {
-      flex: 1;
-      height: 100%;
-      background: #62ff00;
+    /* 图片完整显示，占满剩余宽度 */
+    .slide img {
+      max-width: calc(80vw - 20pt); /* 留一点空间给竖排文字 */
+      height: auto;
+      display: block;
     }
 
     /* Behance 图标 */
@@ -111,6 +110,7 @@
       height: 100%;
       width: auto;
       display: block;
+      filter: grayscale(100%) brightness(70%);
     }
 
     /* YouTube 图标 */
@@ -123,6 +123,7 @@
       height: 100%;
       width: auto;
       display: block;
+      filter: grayscale(100%) brightness(70%);
     }
 
     /* Bilibili 图标 */
@@ -135,6 +136,7 @@
       height: 100%;
       width: auto;
       display: block;
+      filter: grayscale(100%) brightness(70%);
     }
 
   </style>
@@ -143,29 +145,23 @@
   <div class="wrap">
     <div class="box">
       <div class="label">Projects</div>
-      <div class="meta">Project_title</div>
-      <div class="meta">Time</div>
-      <div class="meta">Role</div>
+      <div class="meta">Takeuhighercake Taipei June Order Poster</div>
+      <div class="meta">25.05.24</div>
+      <div class="meta">Graphic Design</div>
 
       <!-- 滑动内容 -->
       <div class="slider">
         <div class="slide">
-          <div class="vertical-text">fig.1 "the amberfire"</div>
-          <div class="color-block"></div>
-        </div>
-        <div class="slide">
-          <div class="vertical-text">fig.2 "the amberfire"</div>
-          <div class="color-block"></div>
-        </div>
-        <div class="slide">
-          <div class="vertical-text">fig.3 "the amberfire"</div>
-          <div class="color-block"></div>
+          <div class="vertical-text">fig.1 Poster</div>
+          <img src="thcake.jpg" alt="Project Image">
         </div>
       </div>
 
-      <!-- Behance 图标 -->
+      <!-- Behance 图标 + 链接 -->
       <div class="behance-icon">
-        <img src="behance.svg" alt="Behance">
+        <a href="https://www.behance.net/gallery/234961621/Takeuhigercake-Taipei-June-Order-Poster" target="_blank">
+          <img src="behance.svg" alt="Behance">
+        </a>
       </div>
 
       <!-- Vimeo 图标 -->
