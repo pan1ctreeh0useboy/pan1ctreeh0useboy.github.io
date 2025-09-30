@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
-  <title>!ABOUT!</title>
+  <title>ENTER L0BBY</title>
   <style>
     html, body {
       margin: 0;
@@ -88,7 +88,32 @@
   </div>
 
   <script>
-    function adjustGifWidth() {
+    function adjustLayout() {
+      const secondDiv = document.querySelector('.label div:nth-child(2)');
+      const originalFontSize = 16;
+      const originalLineHeight = 16;
+      const originalMarginBottom = 13.6;
+
+      // Reset to original to measure natural width
+      secondDiv.style.fontSize = `${originalFontSize}pt`;
+      secondDiv.style.lineHeight = `${originalLineHeight}pt`;
+      secondDiv.style.marginBottom = `${originalMarginBottom}pt`;
+
+      const naturalWidth = secondDiv.getBoundingClientRect().width;
+      const targetWidth = window.innerWidth * 0.8;
+
+      if (naturalWidth > 0) {
+        const scaleFactor = targetWidth / naturalWidth;
+        const newFontSize = originalFontSize * scaleFactor;
+        const newLineHeight = originalLineHeight * scaleFactor;
+        const newMarginBottom = originalMarginBottom * scaleFactor;
+
+        secondDiv.style.fontSize = `${newFontSize}pt`;
+        secondDiv.style.lineHeight = `${newLineHeight}pt`;
+        secondDiv.style.marginBottom = `${newMarginBottom}pt`;
+      }
+
+      // Now adjust GIF
       const textDiv = document.querySelector('.label div:last-child');
       const gifContainer = document.querySelector('.gif-container');
 
@@ -113,8 +138,8 @@
       gifContainer.style.top = `${textBottom}px`;
     }
 
-    window.addEventListener('load', adjustGifWidth);
-    window.addEventListener('resize', adjustGifWidth);
+    window.addEventListener('load', adjustLayout);
+    window.addEventListener('resize', adjustLayout);
   </script>
 </body>
 </html>
