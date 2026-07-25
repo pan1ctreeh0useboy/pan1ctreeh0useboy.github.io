@@ -1,40 +1,263 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>crysta</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+<meta charset="UTF-8">
 
-    html, body {
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(to bottom right, #1e1e2f, #3a3a60);
-      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-    }
+<title>Minecraft End Portal</title>
 
-    h1 {
-      font-size: 2rem;
-      animation: fadeIn 1.5s ease-out forwards;
-    }
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-  </style>
+<style>
+
+html,body{
+    margin:0;
+    padding:0;
+    overflow:hidden;
+    background:#000;
+}
+
+canvas{
+    display:block;
+}
+
+#info{
+    position:fixed;
+    top:20px;
+    left:20px;
+    color:white;
+    font-family:monospace;
+    opacity:.6;
+    z-index:10;
+}
+
+</style>
+
 </head>
+
+
 <body>
-  <h1>Hello</h1>
+
+<div id="info">
+CLICK → mouse control<br>
+DRAG → look around
+</div>
+
+
+<script>
+
+
+let portal;
+
+
+let rotX=0;
+let rotY=0;
+
+
+let dragging=false;
+
+let lastX=0;
+let lastY=0;
+
+
+
+function preload(){
+
+    portal=loadImage(
+        "111.png"
+    );
+
+}
+
+
+
+function setup(){
+
+    createCanvas(
+        windowWidth,
+        windowHeight,
+        WEBGL
+    );
+
+    imageMode(CENTER);
+
+}
+
+
+
+function draw(){
+
+    background(0);
+
+
+    // camera rotation
+
+    rotateX(rotX);
+
+    rotateY(rotY);
+
+
+
+    // portal depth layers
+
+    for(let i=35;i>=0;i--){
+
+
+        push();
+
+
+
+        // depth
+
+        translate(
+            0,
+            0,
+            -i*18
+        );
+
+
+
+        // shrinking perspective
+
+        let scaleValue=
+        map(
+            i,
+            0,
+            35,
+            1.5,
+            0.15
+        );
+
+
+
+        scale(
+            scaleValue
+        );
+
+
+
+        // rotating galaxy
+
+        rotateZ(
+            frameCount*0.003
+            +
+            i*0.12
+        );
+
+
+
+        // transparency
+
+        tint(
+            255,
+            map(
+                i,
+                0,
+                35,
+                20,
+                160
+            )
+        );
+
+
+
+        image(
+            portal,
+            0,
+            0,
+            700,
+            700
+        );
+
+
+
+        pop();
+
+    }
+
+
+
+    noTint();
+
+
+
+    // purple portal edge glow
+
+    stroke(
+        130,
+        70,
+        255,
+        100
+    );
+
+    noFill();
+
+    strokeWeight(3);
+
+    ellipse(
+        0,
+        0,
+        720,
+        720
+    );
+
+
+}
+
+
+
+
+function mousePressed(){
+
+dragging=true;
+
+lastX=mouseX;
+lastY=mouseY;
+
+}
+
+
+
+function mouseReleased(){
+
+dragging=false;
+
+}
+
+
+
+function mouseDragged(){
+
+if(dragging){
+
+rotY +=
+(mouseX-lastX)*0.006;
+
+
+rotX +=
+(mouseY-lastY)*0.006;
+
+
+lastX=mouseX;
+lastY=mouseY;
+
+}
+
+}
+
+
+
+function windowResized(){
+
+resizeCanvas(
+windowWidth,
+windowHeight
+);
+
+}
+
+
+</script>
+
+
 </body>
 </html>
-
