@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="robots" content="noindex" />
+  <title>Photography — Upload</title>
+  <script type="module" crossorigin src="/assets/admin-DBdif1N3.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/project-bIKyPWnZ.js">
+  <link rel="stylesheet" crossorigin href="/assets/project-nlTTrzgI.css">
+  <link rel="stylesheet" crossorigin href="/assets/admin-BGs8P-NL.css">
+</head>
+<body>
+  <main class="wrap"><section class="box admin-box">
+    <div class="admin-heading"><h1 class="label">Photography</h1><a href="/photography.html">Back</a></div>
+    <p id="connection-status" class="admin-note" role="status"></p>
+    <form id="login-form" class="admin-form">
+      <label>Password<input name="password" type="password" autocomplete="current-password" required maxlength="200" autofocus /></label>
+      <button type="submit">Enter</button>
+    </form>
+    <section id="editor" hidden>
+      <form id="upload-form" class="admin-form">
+        <label>Series<select name="series" required></select></label>
+        <fieldset id="location-fields">
+          <label>Location name<input name="name" maxlength="100" required placeholder="Changbai Mountain" /></label>
+          <label>Address<textarea name="address" rows="3" maxlength="500" required placeholder="Place, town, city / prefecture, province / state, country"></textarea></label>
+          <p class="admin-note">Use English. Leave county out of the address.</p>
+          <div class="coordinate-fields">
+            <label>Latitude<input name="latitude" type="number" min="-90" max="90" step="any" required /></label>
+            <label>Longitude<input name="longitude" type="number" min="-180" max="180" step="any" required /></label>
+          </div>
+        </fieldset>
+        <label>Device<input name="device" maxlength="100" value="iPhone 15 Pro" required /></label>
+        <label>Photographs<input name="photos" type="file" accept="image/jpeg,image/png,image/webp" multiple required /></label>
+        <p class="admin-note">JPEG, PNG or WebP. Up to 10 photos, 5 MB each, 10 MB total. Upload order follows the list below.</p>
+        <ul id="selected-files" class="selected-files"></ul>
+        <button type="submit">Upload</button>
+      </form>
+      <button id="logout" type="button" class="logout">Sign out</button>
+    </section>
+    <p id="admin-status" role="status" aria-live="polite"></p>
+  </section></main>
+</body>
+</html>

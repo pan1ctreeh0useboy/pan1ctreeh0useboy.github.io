@@ -1,0 +1,1 @@
+import"./project-bIKyPWnZ.js";const r=document.querySelector(".artwork"),e=r.querySelector("img"),t=()=>{e.hidden=!0,e.style.display="none",r.querySelector(".image-placeholder").hidden=!1};e.addEventListener("error",t);e.complete&&!e.naturalWidth&&t();

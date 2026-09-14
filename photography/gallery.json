@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "locations": [{
+    "id": "changbai-mountain",
+    "name": "Changbai Mountain",
+    "address": "Changbai Mountain North Scenic Area, Erdaobaihe Town, Yanbian Korean Autonomous Prefecture, Jilin Province, China",
+    "latitude": 42.1811,
+    "longitude": 128.171,
+    "photos": [
+      { "id": "changbai-01", "src": null, "alt": "", "width": 3, "height": 2, "device": "iPhone 15 Pro" },
+      { "id": "changbai-02", "src": null, "alt": "", "width": 2, "height": 3, "device": "iPhone 15 Pro" },
+      { "id": "changbai-03", "src": null, "alt": "", "width": 1, "height": 1, "device": "iPhone 15 Pro" }
+    ]
+  }]
+}
