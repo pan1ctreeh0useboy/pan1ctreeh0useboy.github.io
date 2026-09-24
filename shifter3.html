@@ -70,6 +70,8 @@
     .file-action:hover { transform: translateY(-2px); background: #fff; }
     .file-action:active { transform: translateY(0) scale(.94); }
     .file-actions .file-action { width: 42px; height: 42px; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; }
+    .toolbar-icon { width: 22px; height: 22px; display: block; object-fit: contain; filter: brightness(0); pointer-events: none; }
+    .file-action .toolbar-icon { width: 21px; height: 21px; }
 
     /* 左侧绘图工具栏：纯白纵向胶囊；每个工具及选中态都保持黑白圆形。 */
     .toolbar {
@@ -84,6 +86,7 @@
     }
     .tool-btn:hover { background: #f0f0ed; }
     .tool-btn.active { background: #111; color: #fff; box-shadow: none; }
+    .tool-btn.active .toolbar-icon { filter: brightness(0) invert(1); }
     .tool-btn::after {
       content: attr(data-tip); position: absolute; left: 52px; top: 50%; transform: translateY(-50%) translateX(-3px);
       white-space: nowrap; padding: 6px 8px; border-radius: 7px; background: #242722; color: white;
@@ -143,12 +146,17 @@
       background: #fff; border: 0; box-shadow: 0 14px 38px rgba(28,32,26,.12), 0 2px 7px rgba(28,32,26,.08);
       backdrop-filter: none; -webkit-backdrop-filter: none;
     }
+    .style-panel.disabled { pointer-events: none; }
     .color-wrap { width: 38px; height: 38px; position: relative; border-radius: 50%; overflow: hidden; border: 3px solid white; box-shadow: 0 0 0 1px var(--line); transition: .16s ease; }
     .color-wrap:hover { box-shadow: 0 0 0 2px #111; }
     .color-wrap input { position: absolute; inset: -7px; width: 50px; height: 50px; border: 0; padding: 0; cursor: pointer; }
     .width-wrap { display: flex; align-items: center; gap: 8px; }
     .width-wrap input { accent-color: var(--ink); width: 102px; }
-    #sizeValue { min-width: 48px; color: var(--muted); font-size: var(--min-text-size); font-variant-numeric: tabular-nums; }
+    #sizeValue, #sizeEntry { width: 64px; padding: 0; border: 0; background: transparent; color: var(--muted); font-size: var(--min-text-size); font-variant-numeric: tabular-nums; text-align: left; }
+    #sizeValue { cursor: text; }
+    #sizeEntry { display: none; }
+    #sizeEntry.open { display: block; }
+    #sizeValue.editing { display: none; }
     .fill-btn { width: auto; min-width: 68px; height: 38px; padding: 0 14px; border: 0; border-radius: 999px; background: #fff; color: #111; cursor: pointer; font-size: var(--min-text-size); font-weight: 120; transition: .16s ease; }
     .fill-btn:hover, .fill-btn.active { background: #111; color: #fff; }
 
@@ -170,6 +178,21 @@
       text-align: center; white-space: nowrap; will-change: filter;
     }
     .hint-message { display: block; opacity: 0; filter: blur(12px); animation: hint-intro 4.5s both; }
+    .project-home { position: fixed; z-index: 110; inset: 0; display: flex; align-items: center; justify-content: center; visibility: hidden; pointer-events: none; background: rgba(248,249,255,0); backdrop-filter: blur(0); -webkit-backdrop-filter: blur(0); }
+    .project-home.open { visibility: visible; pointer-events: auto; }
+    .project-noise { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+    .project-card { position: relative; z-index: 1; width: min(420px,calc(100vw - 36px)); max-height: calc(100vh - 48px); overflow: auto; padding: 22px; border-radius: 22px; background: #fff; box-shadow: var(--shadow); }
+    .project-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+    .project-header h1 { margin: 0; font-size: var(--min-text-size); font-weight: 120; }
+    .project-settings-button, .project-new, .project-list button { border: 0; font: inherit; cursor: pointer; }
+    .project-settings-button { background: transparent; color: var(--muted); }
+    .project-list { display: flex; flex-direction: column; gap: 9px; }
+    .project-list button { width: 100%; min-height: 62px; padding: 0 18px; border-radius: 15px; background: #fff; border: 1px solid #e8e8ed; text-align: left; transition: transform .28s cubic-bezier(.33,0,0,1),background .28s cubic-bezier(.33,0,0,1),box-shadow .28s cubic-bezier(.33,0,0,1); }
+    .project-list button.active { background: var(--accent-soft); box-shadow: inset 0 0 0 1px var(--accent); transform: translateX(6px); }
+    .project-new { width: 100%; min-height: 48px; margin-top: 13px; border-radius: 999px; background: #111; color: #fff; }
+    .project-settings { display: none; margin-top: 13px; }
+    .project-settings.open { display: block; }
+    .project-settings input { width: 100%; height: 46px; padding: 0 14px; border: 1px solid #e8e8ed; border-radius: 12px; background: #fff; }
     @keyframes hint-intro {
       0% { opacity: 0; filter: blur(12px); animation-timing-function: cubic-bezier(.2,.8,.2,1); }
       33.333% { opacity: 1; filter: blur(0); }
@@ -194,11 +217,12 @@
     .editor textarea {
       display: block; resize: none; width: 100%; min-height: 92px; max-height: 320px;
       border: 1px solid var(--line); border-radius: 11px; padding: 10px; outline: none;
-      color: var(--ink); background: #fffefb; user-select: text; white-space: pre-wrap; overflow-wrap: anywhere;
+      color: var(--ink); background: #fffefb; user-select: text; white-space: pre; overflow-wrap: normal; overflow-x: auto;
     }
     .editor textarea:focus { border-color: var(--line); box-shadow: none; }
     .editor-actions { display: flex; align-items: center; gap: 6px; margin-top: 8px; }
     .action-btn { width: auto; min-width: 64px; height: 42px; border-radius: 12px; padding: 0 14px; font-size: var(--min-text-size); font-weight: 120; background: #fff; color: #111; }
+    .editor.note-editing .action-btn { border-radius: 999px; }
     .action-btn:hover, .action-btn.primary { background: #111; color: #fff; }
     .action-btn.delete { color: #111; background: #fff; margin-right: auto; }
     .action-btn.delete:hover { color: #fff; background: #111; }
@@ -259,24 +283,24 @@
 
   <!-- 左侧工具栏：data-tool 会由 JavaScript 映射到当前绘制工具。 -->
   <nav class="toolbar glass" aria-label="绘图工具">
-    <button class="tool-btn active" data-tool="select" data-tip="选择 · V / Shift 多选" aria-label="选择或多选">↖</button>
-    <button class="tool-btn" data-tool="pen" data-tip="画笔 · P" aria-label="画笔">✎</button>
-    <button class="tool-btn" data-tool="marker" data-tip="马克笔 · M" aria-label="马克笔">▰</button>
-    <button class="tool-btn" data-tool="eraser" data-tip="橡皮 · E" aria-label="橡皮">◇</button>
+    <button class="tool-btn active" data-tool="select" data-tip="选择 · V / Shift 多选" aria-label="选择或多选"><img class="toolbar-icon" src="https://pan1ctreeh0useboy.github.io/cursor.svg" alt="" draggable="false"></button>
+    <button class="tool-btn" data-tool="pen" data-tip="画笔 · P" aria-label="画笔"><img class="toolbar-icon" src="https://pan1ctreeh0useboy.github.io/pencil.svg" alt="" draggable="false"></button>
+    <button class="tool-btn" data-tool="marker" data-tip="马克笔 · M" aria-label="马克笔"><img class="toolbar-icon" src="https://pan1ctreeh0useboy.github.io/marker.svg" alt="" draggable="false"></button>
+    <button class="tool-btn" data-tool="eraser" data-tip="橡皮 · E" aria-label="橡皮"><img class="toolbar-icon" src="https://pan1ctreeh0useboy.github.io/eraser.svg" alt="" draggable="false"></button>
     <div class="tool-sep"></div>
-    <button class="tool-btn" data-tool="rect" data-tip="矩形 · R" aria-label="矩形">□</button>
-    <button class="tool-btn" data-tool="ellipse" data-tip="椭圆 · O" aria-label="椭圆">○</button>
-    <button class="tool-btn" data-tool="line" data-tip="直线 · L" aria-label="直线">╱</button>
-    <button class="tool-btn" data-tool="arrow" data-tip="箭头 · A" aria-label="箭头">→</button>
+    <button class="tool-btn" data-tool="rect" data-tip="矩形 · R" aria-label="矩形"><img class="toolbar-icon" src="https://pan1ctreeh0useboy.github.io/rectangle.svg" alt="" draggable="false"></button>
+    <button class="tool-btn" data-tool="ellipse" data-tip="椭圆 · O" aria-label="椭圆"><img class="toolbar-icon" src="https://pan1ctreeh0useboy.github.io/circle.svg" alt="" draggable="false"></button>
+    <button class="tool-btn" data-tool="line" data-tip="直线 · L" aria-label="直线"><img class="toolbar-icon" src="https://pan1ctreeh0useboy.github.io/line.svg" alt="" draggable="false"></button>
+    <button class="tool-btn" data-tool="arrow" data-tip="箭头 · A" aria-label="箭头"><img class="toolbar-icon" src="https://pan1ctreeh0useboy.github.io/arroqw.svg" alt="" draggable="false"></button>
     <div class="tool-sep"></div>
-    <button class="tool-btn" data-tool="note" data-tip="便签 · N" aria-label="便签">▧</button>
-    <button class="tool-btn" data-tool="text" data-tip="文字 · T" aria-label="文字">T</button>
-    <button class="tool-btn" data-tool="hand" data-tip="平移 · H / Alt拖动" aria-label="平移">✋</button>
+    <button class="tool-btn" data-tool="note" data-tip="便签 · N" aria-label="便签"><img class="toolbar-icon" src="https://pan1ctreeh0useboy.github.io/note.svg" alt="" draggable="false"></button>
+    <button class="tool-btn" data-tool="text" data-tip="文字 · T" aria-label="文字"><img class="toolbar-icon" src="https://pan1ctreeh0useboy.github.io/text.svg" alt="" draggable="false"></button>
+    <button class="tool-btn" data-tool="hand" data-tip="平移 · H / Alt拖动" aria-label="平移"><img class="toolbar-icon" src="https://pan1ctreeh0useboy.github.io/hand.svg" alt="" draggable="false"></button>
     <div class="tool-sep"></div>
     <!-- 文件控制：在工具按钮下方竖直排列，分别打开导入与导出。 -->
     <div class="file-actions" aria-label="文件操作">
-      <button class="file-action" id="importBtn" aria-label="导入图片或画板备份">↥</button>
-      <button class="file-action" id="exportBtn" aria-label="导出画板">↧</button>
+      <button class="file-action" id="importBtn" aria-label="导入图片或画板备份"><img class="toolbar-icon" src="https://pan1ctreeh0useboy.github.io/import.svg" alt="" draggable="false"></button>
+      <button class="file-action" id="exportBtn" aria-label="导出画板"><img class="toolbar-icon" src="https://pan1ctreeh0useboy.github.io/export.svg" alt="" draggable="false"></button>
     </div>
   </nav>
 
@@ -305,7 +329,7 @@
     <label class="color-wrap" title="颜色"><input id="colorPicker" type="color" value="#20231f" aria-label="绘制颜色"></label>
     <div class="width-wrap">
       <input id="sizeSlider" type="range" min="1" max="36" value="4" aria-label="笔触粗细">
-      <span id="sizeValue">4 px</span>
+      <button id="sizeValue" type="button" aria-label="输入尺寸">4 px</button><input id="sizeEntry" type="number" step="any" aria-label="尺寸数值">
     </div>
     <button class="fill-btn" id="fillBtn" title="形状填充" aria-label="切换形状填充">填充</button>
   </section>
@@ -326,11 +350,12 @@
   </section>
 
   <!-- 统一非阻塞反馈：页面提示和所有操作消息共用同一位置与动画。 -->
-  <div class="hint" id="hint"><span class="hint-message" id="hintText">按下 空格 来反转世界。</span></div>
+  <div class="hint" id="hint"><span class="hint-message" id="hintText"></span></div>
+  <div class="project-home" id="projectHome" aria-hidden="true"><canvas class="project-noise" id="projectNoise" aria-hidden="true"></canvas><div class="project-card"><div class="project-header"><h1>主页 · 画板</h1><button class="project-settings-button" id="projectSettingsButton" type="button">设置</button></div><div class="project-list" id="projectList"></div><button class="project-new" id="projectNew" type="button">新建画板</button><div class="project-settings" id="projectSettings"><input id="projectName" type="text" aria-label="画板名字"></div></div></div>
 
   <!-- 文字编辑控制：为文字和便签对象提供编辑、删除、取消和完成操作。 -->
   <div class="editor glass" id="editor">
-    <textarea id="editorText" placeholder="输入内容…" aria-label="编辑文字"></textarea>
+    <textarea id="editorText" wrap="off" placeholder="输入内容…" aria-label="编辑文字"></textarea>
     <div class="editor-actions">
       <button class="action-btn delete" id="editorDelete">删除</button>
       <button class="action-btn" id="editorCancel">取消</button>
@@ -365,6 +390,8 @@
       // ===== 控制 UI 配置 =====
       // 每个数字模式按钮对应一组可插值滤镜参数；名称用于操作提示与无障碍标签。
       const STORAGE_KEY = 'positive-negative-freeboard-v1';
+      const PROJECTS_KEY = 'shifter-projects-v1';
+      const ACTIVE_PROJECT_KEY = 'shifter-active-project-v1';
       const BOARD_BG = '#f3f1ea';
       const BOARD_FONT = 'serif';
       const FILTER_BASE = { grayscale:0, invert:0, sepia:0, saturate:1, contrast:1, hue:0 };
@@ -403,6 +430,7 @@
       // ===== 画板与 UI 共享状态 =====
       // 修改这些变量后，应调用对应的 syncUI / syncZoom / applyPreview 保持界面一致。
       let renderer;
+      let projectNoise;
       let items = [];
       let tool = 'select';
       // 多选集合：Shift 点击时追加/取消，普通点击时替换为单选。
@@ -419,6 +447,18 @@
       let viewVelocity = { x:0, y:0, zoom:0 };
       let viewMotion = null;
       let style = { color: '#20231f', size: 4, fill: false };
+      let stylePanelSignature = '';
+      let stylePanelBlur = 0;
+      let stylePanelBlurTarget = 0;
+      let stylePanelBlurVelocity = 0;
+      let startupHintTimer = null;
+      let projects = [];
+      let activeProjectId = 'board-1';
+      let projectHomeOpen = false;
+      let projectIndex = 0;
+      let projectBlur = 0;
+      let projectBlurTarget = 0;
+      let projectBlurVelocity = 0;
       let negativeOn = false;
       let negativeMode = 'classic';
       let desaturated = false;
@@ -464,16 +504,23 @@
       function setupBoard() {
         renderer = createCanvas(windowWidth, windowHeight);
         renderer.parent('canvas-shell');
+        projectNoise=createGraphics(windowWidth,windowHeight,$('#projectNoise'));
+        projectNoise.pixelDensity(1);
         pixelDensity(Math.min(2, window.devicePixelRatio || 1));
         renderer.elt.setAttribute('aria-label', '可绘制的无限画布');
         renderer.elt.addEventListener('contextmenu', (e) => e.preventDefault());
         loadLocal();
         if (!history.length) pushHistory();
         syncUI();
+        showToast(projects.find(project=>project.id===activeProjectId)?.name||'Untitled 1');
+        startupHintTimer=setTimeout(()=>showToast('按下 空格 来反转世界。'),4500);
       }
 
       window.setup = setupBoard;
       window.draw = function() {
+        syncStylePanel();
+        updateStylePanelDamping();
+        updateProjectHomeDamping();
         updateViewDamping();
         updateTaijiDamping();
         updateArrowColorDamping();
@@ -497,6 +544,42 @@
         const acceleration=(target-value)*config.stiffness-velocity*config.damping;
         const nextVelocity=velocity+acceleration*dt;
         return { value:value+nextVelocity*dt, velocity:nextVelocity };
+      }
+
+      function drawProjectEdgeNoise() {
+        if(!projectNoise)return;
+        const g=projectNoise,w=g.width,h=g.height,band=Math.min(150,Math.max(65,Math.min(w,h)*.15)),time=frameCount*.016;
+        g.clear();g.noStroke();
+        for(let i=0;i<2300;i++){
+          const along=(i*.61803398875+noise(i*.17,time*.32)*.018)%1;
+          const depth=Math.pow(random(),2)*band;
+          let x,y;
+          if(i%4===0){x=along*w;y=depth;}
+          else if(i%4===1){x=w-depth;y=along*h;}
+          else if(i%4===2){x=along*w;y=h-depth;}
+          else{x=depth;y=along*h;}
+          const organic=noise(x*.018,y*.018,time),edge=Math.pow(1-depth/band,1.8);
+          const alpha=(8+36*organic)*edge*projectBlur;
+          if(i%5===0)g.fill(255,255,255,alpha*1.3);
+          else g.fill(51,60,236,alpha);
+          g.circle(x,y,random(.7,2.3));
+        }
+      }
+
+      function updateProjectHomeDamping() {
+        if(!$('#projectHome').classList.contains('open'))return;
+        const dt=Math.min(Math.max((Number.isFinite(deltaTime)?deltaTime:16.67)/1000,0),MAX_SPRING_DT);
+        if(Math.abs(projectBlurTarget-projectBlur)>.001||Math.abs(projectBlurVelocity)>.005){
+          const step=springStep(projectBlur,projectBlurTarget,projectBlurVelocity,SPRING.taiji,dt);
+          projectBlur=step.value;projectBlurVelocity=step.velocity;
+        }
+        if(Math.abs(projectBlurTarget-projectBlur)<.001&&Math.abs(projectBlurVelocity)<.005){projectBlur=projectBlurTarget;projectBlurVelocity=0;}
+        const strength=Math.max(0,Math.min(1,projectBlur)),home=$('#projectHome');
+        home.style.backdropFilter=`blur(${15*strength}px)`;
+        home.style.webkitBackdropFilter=`blur(${15*strength}px)`;
+        home.style.backgroundColor=`rgba(248,249,255,${.62*strength})`;
+        drawProjectEdgeNoise();
+        if(!projectHomeOpen&&projectBlur===0){home.classList.remove('open');projectNoise.clear();}
       }
 
       function setViewTarget(to,{kind='zoom',anchorScreen=null,anchorWorld=null,resetVelocity=false}={}) {
@@ -677,36 +760,8 @@
         strokeJoin(ROUND);
       }
 
-      // ===== 文本框排版 =====
-      // 中文按字、英文按词换行；超长单词会继续按字符拆分，保证内容始终留在文本框宽度内。
-      function wrapTextLines(content,maxWidth) {
-        const ctx=drawingContext, paragraphs=String(content??'').replace(/\r\n?/g,'\n').split('\n');
-        const lines=[];
-        const fits=value=>ctx.measureText(value).width<=maxWidth;
-        for(const paragraph of paragraphs){
-          if(!paragraph){lines.push('');continue;}
-          const paragraphStart=lines.length;
-          const tokens=paragraph.match(/[\u3400-\u9fff\uf900-\ufaff]|[^\s\u3400-\u9fff\uf900-\ufaff]+|\s+/gu)||[];
-          let line='';
-          for(let token of tokens){
-            if(/^\s+$/u.test(token)&&!line) continue;
-            const candidate=line+token;
-            if(fits(candidate)){line=candidate;continue;}
-            if(line){lines.push(line.trimEnd());line='';}
-            token=token.trimStart();
-            if(!token) continue;
-            if(fits(token)){line=token;continue;}
-            let fragment='';
-            for(const character of Array.from(token)){
-              if(fragment&&!fits(fragment+character)){lines.push(fragment);fragment=character;}
-              else fragment+=character;
-            }
-            line=fragment;
-          }
-          if(line||lines.length===paragraphStart) lines.push(line.trimEnd());
-        }
-        return lines.length?lines:[''];
-      }
+      // 文字与便签只在用户输入回车时换行。
+      const manualLines = content => String(content??'').replace(/\r\n?/g,'\n').split('\n');
 
       function getTextBoxMetrics(o) {
         const width=Number.isFinite(o?.w)?o.w:280, height=Number.isFinite(o?.h)?o.h:160;
@@ -718,17 +773,21 @@
           fontSize:Math.max(MIN_TEXT_PX,Number.isFinite(o?.size)?o.size:MIN_TEXT_PX)
         };
       }
+      function getTextRenderBounds(o) {
+        const {x,y,fontSize}=getTextBoxMetrics(o), lines=manualLines(o.text||'双击编辑文字');
+        drawingContext.save();drawingContext.font=`${fontSize}px ${BOARD_FONT}`;
+        const w=Math.max(1,...lines.map(line=>drawingContext.measureText(line).width));
+        drawingContext.restore();
+        return {x,y,w,h:lines.length*fontSize*1.35};
+      }
 
       function drawTextBox(o,isDraft=false) {
         const metrics=getTextBoxMetrics(o), {x,y,w:boxW,h:boxH,fontSize}=metrics;
         const leading=fontSize*1.35;
         noStroke();fill(o.color||style.color);textFont(BOARD_FONT);textSize(fontSize);textLeading(leading);textAlign(LEFT,TOP);
         const content=o.text||(isDraft?'拖动确定文本框范围':'双击编辑文字');
-        const lines=wrapTextLines(content,boxW), maxLines=Math.max(1,Math.floor(boxH/leading));
-        drawingContext.save();
-        drawingContext.beginPath();drawingContext.rect(x,y,boxW,boxH);drawingContext.clip();
-        for(let index=0;index<Math.min(lines.length,maxLines);index++) text(lines[index],x,y+index*leading);
-        drawingContext.restore();
+        const lines=manualLines(content);
+        for(let index=0;index<lines.length;index++) text(lines[index],x,y+index*leading);
         if(isDraft){
           push();noFill();stroke('#333CEC');strokeWeight(1.5/view.zoom);drawingContext.setLineDash([6/view.zoom,4/view.zoom]);
           rect(x,y,boxW,boxH,4/view.zoom);drawingContext.setLineDash([]);pop();
@@ -790,10 +849,13 @@
           noStroke(); fill(o.color || '#fff2a8');
           rect(o.x,o.y,o.w,o.h,10);
           drawingContext.restore();
-          fill('#20231f'); noStroke(); textFont(BOARD_FONT); textSize(MIN_TEXT_PX); textLeading(MIN_TEXT_PX*1.4); textAlign(LEFT,TOP);
-          text(o.text || '双击编辑便签', o.x+14,o.y+14,o.w-28,o.h-28);
+          const noteSize=Math.max(MIN_TEXT_PX,o.size||MIN_TEXT_PX), noteLeading=noteSize*1.4;
+          fill('#20231f'); noStroke(); textFont(BOARD_FONT); textSize(noteSize); textLeading(noteLeading); textAlign(LEFT,TOP);
+          drawingContext.save();drawingContext.beginPath();drawingContext.rect(o.x+14,o.y+14,Math.max(0,o.w-28),Math.max(0,o.h-28));drawingContext.clip();
+          manualLines(o.text || '双击编辑便签').forEach((line,index)=>text(line,o.x+14,o.y+14+index*noteLeading));
+          drawingContext.restore();
         } else if (o.type === 'text') {
-          // 文本由独立文本框排版器绘制；改变框宽会立即重新计算自动换行。
+          // 文本框保持用户手动换行；选框缩放会改变文字大小。
           drawTextBox(o,isDraft);
         }
         pop();
@@ -816,22 +878,21 @@
         }
         if (['rect','ellipse','line','arrow'].includes(o.type)) return normalizedRect(o.a,o.b);
         if (o.type === 'note') return {x:o.x,y:o.y,w:o.w,h:o.h};
-        if (o.type === 'text') {
-          const {x,y,w,h}=getTextBoxMetrics(o);
-          return {x,y,w,h};
-        }
+        if (o.type === 'text') return getTextRenderBounds(o);
         return null;
       }
 
       function drawSelection(o) {
         const b = getBounds(o); if (!b) return;
-        const pad = 7 / view.zoom;
+        const pad = o.type==='text'?0:7/view.zoom;
         push();
         noFill(); stroke('#333CEC'); strokeWeight(1.5/view.zoom); drawingContext.setLineDash([6/view.zoom,4/view.zoom]);
         rect(b.x-pad,b.y-pad,b.w+pad*2,b.h+pad*2,5/view.zoom);
         drawingContext.setLineDash([]);
         if(selectedIds.size===1){
-          for (const p of [[b.x-pad,b.y-pad],[b.x+b.w+pad,b.y-pad],[b.x-pad,b.y+b.h+pad],[b.x+b.w+pad,b.y+b.h+pad]]) {
+          const corners=[[b.x-pad,b.y-pad],[b.x+b.w+pad,b.y-pad],[b.x-pad,b.y+b.h+pad],[b.x+b.w+pad,b.y+b.h+pad]];
+          if(o.type==='text') corners.push([b.x+b.w/2,b.y-pad],[b.x+b.w+pad,b.y+b.h/2],[b.x+b.w/2,b.y+b.h+pad],[b.x-pad,b.y+b.h/2]);
+          for (const p of corners) {
             fill('#fff'); stroke('#333CEC'); circle(p[0],p[1],7/view.zoom);
           }
         }
@@ -842,7 +903,7 @@
         if(tool!=='select'||selectedIds.size!==1) return null;
         const id=[...selectedIds][0], item=items.find(o=>o.id===id), bounds=getBounds(item);
         if(!item||!bounds) return null;
-        const pad=7/view.zoom, tolerance=11/view.zoom;
+        const pad=item.type==='text'?0:7/view.zoom, tolerance=11/view.zoom;
         const handles={
           nw:{visual:{x:bounds.x-pad,y:bounds.y-pad},corner:{x:bounds.x,y:bounds.y}},
           ne:{visual:{x:bounds.x+bounds.w+pad,y:bounds.y-pad},corner:{x:bounds.x+bounds.w,y:bounds.y}},
@@ -851,6 +912,17 @@
         };
         for(const [handle,data] of Object.entries(handles)){
           if(Math.hypot(p.x-data.visual.x,p.y-data.visual.y)<=tolerance) return {handle,item,bounds,...data};
+        }
+        if(item.type==='text'){
+          const left=bounds.x-pad,right=bounds.x+bounds.w+pad,top=bounds.y-pad,bottom=bounds.y+bounds.h+pad;
+          if(p.x>=left-tolerance&&p.x<=right+tolerance){
+            if(Math.abs(p.y-top)<=tolerance) return {handle:'n',item,bounds,corner:{x:p.x,y:bounds.y}};
+            if(Math.abs(p.y-bottom)<=tolerance) return {handle:'s',item,bounds,corner:{x:p.x,y:bounds.y+bounds.h}};
+          }
+          if(p.y>=top-tolerance&&p.y<=bottom+tolerance){
+            if(Math.abs(p.x-left)<=tolerance) return {handle:'w',item,bounds,corner:{x:bounds.x,y:p.y}};
+            if(Math.abs(p.x-right)<=tolerance) return {handle:'e',item,bounds,corner:{x:bounds.x+bounds.w,y:p.y}};
+          }
         }
         return null;
       }
@@ -866,6 +938,8 @@
         const minH=(state.original.type==='text'?MIN_TEXT_BOX_H:MIN_OBJECT_SCREEN_SIZE/view.zoom);
         let w=Math.max(minW,west?anchor.x-effective.x:effective.x-anchor.x);
         let h=Math.max(minH,north?anchor.y-effective.y:effective.y-anchor.y);
+        if(state.handle==='n'||state.handle==='s') w=state.bounds.w;
+        if(state.handle==='e'||state.handle==='w') h=state.bounds.h;
         if(lockAspect&&state.bounds.w>.0001&&state.bounds.h>.0001){
           const ratio=Math.max(.01,state.bounds.w/Math.max(state.bounds.h,.01));
           if(w/h>ratio) h=w/ratio; else w=h*ratio;
@@ -875,7 +949,9 @@
 
       function applyResizedBounds(item,original,oldBounds,nextBounds) {
         if(['image','note','text'].includes(item.type)){
-          item.x=nextBounds.x;item.y=nextBounds.y;item.w=nextBounds.w;item.h=nextBounds.h;return;
+          item.x=nextBounds.x;item.y=nextBounds.y;item.w=nextBounds.w;item.h=nextBounds.h;
+          if(item.type==='text') item.size=Math.max(MIN_TEXT_PX,original.size*Math.sqrt((nextBounds.w/oldBounds.w)*(nextBounds.h/oldBounds.h)));
+          return;
         }
         const epsilon=.0001;
         const scaleRatios=[];
@@ -948,7 +1024,7 @@
               kind:'resize',id:resizeHit.item.id,handle:resizeHit.handle,bounds:clone(resizeHit.bounds),original:clone(resizeHit.item),
               pointerOffset:{x:p.x-resizeHit.corner.x,y:p.y-resizeHit.corner.y},moved:false
             };
-            renderer.elt.style.cursor=['nw','se'].includes(resizeHit.handle)?'nwse-resize':'nesw-resize';
+            renderer.elt.style.cursor=resizeHit.handle.length===1?(resizeHit.handle==='n'||resizeHit.handle==='s'?'ns-resize':'ew-resize'):['nw','se'].includes(resizeHit.handle)?'nwse-resize':'nesw-resize';
             return false;
           }
           const hit = hitTest(p);
@@ -1082,7 +1158,7 @@
       window.mouseMoved = function(event) {
         if(!renderer||event.target!==renderer.elt||tool!=='select'||dragState) return;
         const hit=getResizeHandleAt(screenToWorld(mouseX,mouseY));
-        renderer.elt.style.cursor=hit?(['nw','se'].includes(hit.handle)?'nwse-resize':'nesw-resize'):'default';
+        renderer.elt.style.cursor=hit?(hit.handle.length===1?(hit.handle==='n'||hit.handle==='s'?'ns-resize':'ew-resize'):['nw','se'].includes(hit.handle)?'nwse-resize':'nesw-resize'):'default';
       };
 
       window.mouseWheel = function(event) {
@@ -1099,6 +1175,7 @@
 
       window.windowResized = function() {
         resizeCanvas(windowWidth,windowHeight);
+        if(projectNoise)projectNoise.resizeCanvas(windowWidth,windowHeight);
         if($('#exportMenu').classList.contains('open')) positionExportMenu();
       };
 
@@ -1243,6 +1320,8 @@
 
       // 所有操作反馈复用打开提示的位置与 1.5 秒淡入、2 秒停留、1 秒淡出动画。
       function showToast(message) {
+        clearTimeout(startupHintTimer);
+        startupHintTimer=null;
         const el=$('#hintText'); el.textContent=message;
         el.style.animation='none'; void el.offsetWidth; el.style.animation='hint-intro 4.5s both';
       }
@@ -1273,20 +1352,112 @@
       }
       function queueSave() {
         clearTimeout(saveTimer);
-        saveTimer=setTimeout(()=>{ try {localStorage.setItem(STORAGE_KEY,serialize());} catch(e){console.warn('本地保存空间不足',e);} },260);
+        saveTimer=setTimeout(()=>{ try {localStorage.setItem(projectStorageKey(activeProjectId),serialize());} catch(e){console.warn('本地保存空间不足',e);} },260);
+      }
+      const projectStorageKey=id=>`${STORAGE_KEY}:${id}`;
+      function saveProjects() {
+        localStorage.setItem(PROJECTS_KEY,JSON.stringify(projects));
+        localStorage.setItem(ACTIVE_PROJECT_KEY,activeProjectId);
+      }
+      function initProjects() {
+        try { projects=JSON.parse(localStorage.getItem(PROJECTS_KEY)||'[]'); } catch(e) { projects=[]; }
+        if(!Array.isArray(projects)||!projects.length){
+          projects=[{id:'board-1',name:'Untitled 1'}];
+          const legacy=localStorage.getItem(STORAGE_KEY);
+          if(legacy&&!localStorage.getItem(projectStorageKey('board-1')))localStorage.setItem(projectStorageKey('board-1'),legacy);
+        }
+        activeProjectId=localStorage.getItem(ACTIVE_PROJECT_KEY)||projects[0].id;
+        if(!projects.some(project=>project.id===activeProjectId))activeProjectId=projects[0].id;
+        saveProjects();
       }
       function loadLocal() {
         try {
-          const raw=localStorage.getItem(STORAGE_KEY); if (!raw) return;
+          initProjects();
+          const raw=localStorage.getItem(projectStorageKey(activeProjectId)); if (!raw) return;
           const data=JSON.parse(raw); items=normalizeLoadedItems(data.items); view=data.view||view; targetView={...view}; viewMotion=null; viewVelocity={x:0,y:0,zoom:0}; style={...style,...(data.style||{})};
         } catch(e) { console.warn('无法读取本地画板',e); }
       }
+      function renderProjectHome() {
+        const list=$('#projectList');
+        if(list.children.length!==projects.length||projects.some((project,index)=>list.children[index]?.dataset.project!==project.id)){
+          list.replaceChildren();
+          projects.forEach((project,index)=>{
+            const button=document.createElement('button');button.type='button';button.dataset.project=project.id;
+            button.addEventListener('click',()=>openProject(index));list.append(button);
+          });
+        }
+        projects.forEach((project,index)=>{
+          list.children[index].textContent=project.name;
+          list.children[index].classList.toggle('active',index===projectIndex);
+        });
+        list.children[projectIndex]?.scrollIntoView({block:'nearest'});
+      }
+      function openProjectHome() {
+        if($('#editor').classList.contains('open'))saveEditor();
+        projectHomeOpen=true;projectIndex=Math.max(0,projects.findIndex(project=>project.id===activeProjectId));
+        projectBlurTarget=1;
+        $('#projectHome').classList.add('open');$('#projectHome').style.pointerEvents='auto';$('#projectHome').setAttribute('aria-hidden','false');renderProjectHome();
+      }
+      function closeProjectHome() {
+        projectHomeOpen=false;projectBlurTarget=0;$('#projectHome').style.pointerEvents='none';$('#projectHome').setAttribute('aria-hidden','true');
+        $('#projectSettings').classList.remove('open');
+      }
+      function openProject(index) {
+        if(!projects[index])return;
+        clearTimeout(saveTimer);
+        localStorage.setItem(projectStorageKey(activeProjectId),serialize());
+        activeProjectId=projects[index].id;saveProjects();location.reload();
+      }
+      function createProject() {
+        const next=Math.max(0,...projects.map(project=>Number(project.id.match(/^board-(\d+)$/)?.[1])||0))+1;
+        projects.push({id:`board-${next}`,name:`Untitled ${next}`});
+        localStorage.setItem(projectStorageKey(`board-${next}`),JSON.stringify({version:1,items:[],view:{x:innerWidth/2,y:innerHeight/2,zoom:1},style:{color:'#20231f',size:4,fill:false}}));
+        projectIndex=projects.length-1;openProject(projectIndex);
+      }
 
       // ===== 控制 UI 状态同步 =====
-      // 从数据状态反向刷新颜色、粗细、填充、工具、缩放、滤镜和历史按钮。
+      // 左下控件在单选时修改对象，未选择时修改新建对象的默认样式；多选时禁用。
+      function selectedStyleItem() {
+        return selectedIds.size===1?items.find(item=>item.id===[...selectedIds][0]):null;
+      }
+      function updateStylePanelDamping() {
+        if(Math.abs(stylePanelBlurTarget-stylePanelBlur)>=.001||Math.abs(stylePanelBlurVelocity)>=.005){
+          const dt=Math.min(Math.max((Number.isFinite(deltaTime)?deltaTime:16.67)/1000,0),MAX_SPRING_DT);
+          const step=springStep(stylePanelBlur,stylePanelBlurTarget,stylePanelBlurVelocity,SPRING.taiji,dt);
+          stylePanelBlur=step.value;stylePanelBlurVelocity=step.velocity;
+        }
+        if(Math.abs(stylePanelBlurTarget-stylePanelBlur)<.001&&Math.abs(stylePanelBlurVelocity)<.005){stylePanelBlur=stylePanelBlurTarget;stylePanelBlurVelocity=0;}
+        $('.style-panel').style.filter=`blur(${Math.max(0,stylePanelBlur)}px)`;
+      }
+      function syncStylePanel() {
+        const item=selectedStyleItem(), panel=$('.style-panel');
+        const signature=item?`${item.id}|${item.type}|${item.kind||''}|${item.color||''}|${item.width||''}|${item.size||''}|${item.fill||false}`:`selection:${selectedIds.size}|${style.color}|${style.size}|${style.fill}`;
+        if(signature===stylePanelSignature) return;
+        stylePanelSignature=signature;
+        const multiple=selectedIds.size>1;
+        stylePanelBlurTarget=multiple?2:0;
+        panel.classList.toggle('disabled',multiple);
+        panel.setAttribute('aria-disabled',String(multiple));
+        const colorInput=$('#colorPicker'),sizeInput=$('#sizeSlider'),fillButton=$('#fillBtn');
+        const hasColor=!multiple&&(!item||item.type!=='image'&&item.kind!=='eraser');
+        const hasSize=!multiple&&(!item||item.type==='stroke'||item.type==='text'||item.type==='note'||['rect','ellipse','line','arrow'].includes(item.type));
+        const hasFill=!multiple&&(!item||['rect','ellipse'].includes(item.type));
+        colorInput.disabled=!hasColor;sizeInput.disabled=!hasSize;fillButton.disabled=!hasFill;
+        if(hasColor) colorInput.value=item?.color||style.color;
+        if(hasSize){
+          const textSized=item?.type==='text'||item?.type==='note';
+          const value=!item?style.size:textSized?Math.max(MIN_TEXT_PX,item.size||MIN_TEXT_PX):item.width||4;
+          sizeInput.min=textSized?String(MIN_TEXT_PX):'1';
+          sizeInput.max=textSized?'160':item?'144':'36';
+          sizeInput.step=textSized?'0.1':'1';
+          sizeInput.value=String(Math.min(value,Number(sizeInput.max)));
+          $('#sizeValue').textContent=`${Number(value.toFixed(1))} px`;
+        }else $('#sizeValue').textContent='—';
+        fillButton.classList.toggle('active',hasFill&&!!(item?item.fill:style.fill));
+      }
+      // 从数据状态反向刷新工具、缩放、滤镜和历史按钮。
       function syncUI() {
-        $('#colorPicker').value=style.color; $('#sizeSlider').value=style.size; $('#sizeValue').textContent=`${style.size} px`;
-        $('#fillBtn').classList.toggle('active',style.fill); setTool(tool); syncZoom(); applyPreview(); updateUndoRedo();
+        stylePanelSignature='';syncStylePanel();setTool(tool);syncZoom();applyPreview();updateUndoRedo();
       }
       function syncZoom() { $('#zoomLabel').textContent=`${Math.round(targetView.zoom*100)}%`; }
       function zoomAtCenter(factor) {
@@ -1306,6 +1477,7 @@
       function openEditor(item) {
         editingId=item.id;editingOriginalText=String(item.text??'');
         const e=$('#editor'), textarea=$('#editorText'), s=worldToScreen(item.x,item.y), isTextBox=item.type==='text';
+        e.classList.toggle('note-editing',item.type==='note');
         textarea.value=editingOriginalText;
         if(isTextBox){
           const metrics=getTextBoxMetrics(item);
@@ -1386,11 +1558,46 @@
 
       // ===== 控制 UI 事件绑定：绘制样式 =====
       // input 事件提供即时预览，change 事件在操作完成后写入历史。
-      $('#colorPicker').addEventListener('input',e=>style.color=e.target.value);
+      $('#colorPicker').addEventListener('input',e=>{const item=selectedStyleItem();if(selectedIds.size===0)style.color=e.target.value;else if(item&&item.type!=='image'&&item.kind!=='eraser')item.color=e.target.value;});
       $('#colorPicker').addEventListener('change',()=>pushHistory());
-      $('#sizeSlider').addEventListener('input',e=>{style.size=Number(e.target.value);$('#sizeValue').textContent=`${style.size} px`;});
+      function setSelectedSize(value) {
+        const item=selectedStyleItem();if(selectedIds.size>1||!Number.isFinite(value)||value<=0)return false;
+        if(!item)style.size=value;
+        else if(item.type==='text'||item.type==='note')item.size=Math.max(MIN_TEXT_PX,value);
+        else if(item.type==='stroke'||['rect','ellipse','line','arrow'].includes(item.type))item.width=value;
+        else return false;
+        stylePanelSignature='';syncStylePanel();return true;
+      }
+      $('#sizeSlider').addEventListener('input',e=>setSelectedSize(Number(e.target.value)));
       $('#sizeSlider').addEventListener('change',()=>pushHistory());
-      $('#fillBtn').addEventListener('click',()=>{style.fill=!style.fill;$('#fillBtn').classList.toggle('active',style.fill);pushHistory();});
+      $('#sizeValue').addEventListener('click',()=>{
+        const item=selectedStyleItem();if($('#sizeSlider').disabled)return;
+        const entry=$('#sizeEntry');entry.value=String(!item?style.size:item.type==='text'||item.type==='note'?item.size||MIN_TEXT_PX:item.width||4);
+        entry.classList.add('open');$('#sizeValue').classList.add('editing');entry.focus();entry.select();
+      });
+      function finishSizeEntry(commit) {
+        const entry=$('#sizeEntry');if(!entry.classList.contains('open'))return;
+        if(commit&&setSelectedSize(Number(entry.value)))pushHistory();
+        entry.classList.remove('open');$('#sizeValue').classList.remove('editing');stylePanelSignature='';syncStylePanel();
+      }
+      $('#sizeEntry').addEventListener('keydown',e=>{
+        if(e.key==='Enter'){e.preventDefault();finishSizeEntry(true);$('#sizeEntry').blur();}
+        if(e.key==='Escape'){e.preventDefault();finishSizeEntry(false);$('#sizeEntry').blur();}
+      });
+      $('#sizeEntry').addEventListener('blur',()=>finishSizeEntry(true));
+      $('#fillBtn').addEventListener('click',()=>{const item=selectedStyleItem();if(selectedIds.size>1||item&&!['rect','ellipse'].includes(item.type))return;if(item)item.fill=!item.fill;else style.fill=!style.fill;stylePanelSignature='';syncStylePanel();pushHistory();});
+
+      $('#projectNew').addEventListener('click',createProject);
+      $('#projectSettingsButton').addEventListener('click',()=>{
+        const settings=$('#projectSettings'),input=$('#projectName');settings.classList.toggle('open');
+        if(settings.classList.contains('open')){input.value=projects.find(project=>project.id===activeProjectId)?.name||'';input.focus();input.select();}
+      });
+      function saveProjectName() {
+        const name=$('#projectName').value.trim(),project=projects.find(project=>project.id===activeProjectId);
+        if(!name||!project)return;
+        project.name=name;saveProjects();renderProjectHome();$('#projectSettings').classList.remove('open');
+      }
+      $('#projectName').addEventListener('change',saveProjectName);
 
       // ===== 控制 UI 事件绑定：缩放 =====
       $('#zoomOut').addEventListener('click',()=>zoomAtCenter(.8)); $('#zoomIn').addEventListener('click',()=>zoomAtCenter(1.25)); $('#zoomLabel').addEventListener('click',resetView);
@@ -1439,6 +1646,21 @@
       // ===== 全局键盘控制 =====
       // 编辑文字时仅保留编辑快捷键；其他情况下处理反相、历史、删除和工具切换。
       document.addEventListener('keydown',e=>{
+        if(e.key==='Tab'){
+          e.preventDefault();
+          if(!projectHomeOpen)openProjectHome();
+          else {if(document.activeElement===$('#projectName'))$('#projectName').blur();projectIndex=(projectIndex+(e.shiftKey?-1:1)+projects.length)%projects.length;renderProjectHome();}
+          return;
+        }
+        if(projectHomeOpen){
+          if(e.key==='Escape'){e.preventDefault();closeProjectHome();return;}
+          if(e.key==='Enter'){
+            e.preventDefault();
+            if(document.activeElement===$('#projectName'))saveProjectName();else openProject(projectIndex);
+            return;
+          }
+          return;
+        }
         if (isTyping()) {
           if(e.key==='Escape')cancelEditor();
           if((e.metaKey||e.ctrlKey)&&e.key==='Enter')saveEditor();
