@@ -234,6 +234,69 @@
           "uploadId": "4fef4a77-4a72-60cf-d8cc-fa3084638a60"
         }
       ]
+    },
+    {
+      "id": "jakarta",
+      "name": "Jakarta",
+      "address": "Jakarta, Special Capital Region of Jakarta, Indonesia",
+      "latitude": -6.1754049,
+      "longitude": 106.827168,
+      "photos": [
+        {
+          "id": "4e12dc37-2911-1ceb-9dd1-26176846a791-0",
+          "src": "/photography/uploads/4e12dc37-2911-1ceb-9dd1-26176846a791-0.jpg",
+          "alt": "Jakarta",
+          "width": 3360,
+          "height": 2520,
+          "device": "iPhone 15 Pro",
+          "uploadId": "4e12dc37-2911-1ceb-9dd1-26176846a791"
+        },
+        {
+          "id": "4e12dc37-2911-1ceb-9dd1-26176846a791-1",
+          "src": "/photography/uploads/4e12dc37-2911-1ceb-9dd1-26176846a791-1.jpg",
+          "alt": "Jakarta",
+          "width": 3360,
+          "height": 2520,
+          "device": "iPhone 15 Pro",
+          "uploadId": "4e12dc37-2911-1ceb-9dd1-26176846a791"
+        },
+        {
+          "id": "4e12dc37-2911-1ceb-9dd1-26176846a791-2",
+          "src": "/photography/uploads/4e12dc37-2911-1ceb-9dd1-26176846a791-2.jpg",
+          "alt": "Jakarta",
+          "width": 3360,
+          "height": 2520,
+          "device": "iPhone 15 Pro",
+          "uploadId": "4e12dc37-2911-1ceb-9dd1-26176846a791"
+        },
+        {
+          "id": "4e12dc37-2911-1ceb-9dd1-26176846a791-3",
+          "src": "/photography/uploads/4e12dc37-2911-1ceb-9dd1-26176846a791-3.jpg",
+          "alt": "Jakarta",
+          "width": 3360,
+          "height": 2520,
+          "device": "iPhone 15 Pro",
+          "uploadId": "4e12dc37-2911-1ceb-9dd1-26176846a791"
+        },
+        {
+          "id": "4e12dc37-2911-1ceb-9dd1-26176846a791-4",
+          "src": "/photography/uploads/4e12dc37-2911-1ceb-9dd1-26176846a791-4.jpg",
+          "alt": "Jakarta",
+          "width": 3360,
+          "height": 2520,
+          "device": "iPhone 15 Pro",
+          "uploadId": "4e12dc37-2911-1ceb-9dd1-26176846a791"
+        },
+        {
+          "id": "4e12dc37-2911-1ceb-9dd1-26176846a791-5",
+          "src": "/photography/uploads/4e12dc37-2911-1ceb-9dd1-26176846a791-5.jpg",
+          "alt": "Jakarta",
+          "width": 3360,
+          "height": 2520,
+          "device": "iPhone 15 Pro",
+          "uploadId": "4e12dc37-2911-1ceb-9dd1-26176846a791"
+        }
+      ]
     }
   ]
 }
