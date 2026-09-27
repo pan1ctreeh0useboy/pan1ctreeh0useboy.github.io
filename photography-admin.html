@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <meta name="robots" content="noindex" />
   <title>Photography — Upload</title>
-  <script type="module" crossorigin src="/assets/admin-DBdif1N3.js"></script>
+  <script type="module" crossorigin src="/assets/admin-DBIlzU1j.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/project-bIKyPWnZ.js">
   <link rel="stylesheet" crossorigin href="/assets/project-nlTTrzgI.css">
-  <link rel="stylesheet" crossorigin href="/assets/admin-BGs8P-NL.css">
+  <link rel="stylesheet" crossorigin href="/assets/admin-NruGBVhX.css">
 </head>
 <body>
   <main class="wrap"><section class="box admin-box">
@@ -31,11 +31,16 @@
           </div>
         </fieldset>
         <label>Device<input name="device" maxlength="100" value="iPhone 15 Pro" required /></label>
-        <label>Photographs<input name="photos" type="file" accept="image/jpeg,image/png,image/webp" multiple required /></label>
+        <label>Photographs<input name="photos" type="file" accept="image/jpeg,image/png,image/webp" multiple /></label>
         <p class="admin-note">JPEG, PNG or WebP. Up to 10 photos, 5 MB each, 10 MB total. Upload order follows the list below.</p>
         <ul id="selected-files" class="selected-files"></ul>
         <button type="submit">Upload</button>
       </form>
+      <section class="published-section" aria-labelledby="published-heading">
+        <h2 id="published-heading">Published photographs</h2>
+        <p class="admin-note">Choose a series to see its photographs. Select a new file to replace one, or remove it from the website.</p>
+        <ul id="published-files" class="published-files"></ul>
+      </section>
       <button id="logout" type="button" class="logout">Sign out</button>
     </section>
     <p id="admin-status" role="status" aria-live="polite"></p>
