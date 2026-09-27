@@ -304,6 +304,33 @@
           "height": 3360,
           "device": "RICOH GR III",
           "uploadId": "6e0a34b2-bca1-9e83-51a5-2d17962b59ea"
+        },
+        {
+          "id": "56ec0ead-6b71-e2c5-f1db-f9d51803e5e4-0",
+          "src": "/photography/uploads/56ec0ead-6b71-e2c5-f1db-f9d51803e5e4-0.jpg",
+          "alt": "Balinhexi",
+          "width": 3360,
+          "height": 2240,
+          "device": "RICOH GR III",
+          "uploadId": "56ec0ead-6b71-e2c5-f1db-f9d51803e5e4"
+        },
+        {
+          "id": "56ec0ead-6b71-e2c5-f1db-f9d51803e5e4-1",
+          "src": "/photography/uploads/56ec0ead-6b71-e2c5-f1db-f9d51803e5e4-1.jpg",
+          "alt": "Balinhexi",
+          "width": 3360,
+          "height": 2240,
+          "device": "RICOH GR III",
+          "uploadId": "56ec0ead-6b71-e2c5-f1db-f9d51803e5e4"
+        },
+        {
+          "id": "56ec0ead-6b71-e2c5-f1db-f9d51803e5e4-2",
+          "src": "/photography/uploads/56ec0ead-6b71-e2c5-f1db-f9d51803e5e4-2.jpg",
+          "alt": "Balinhexi",
+          "width": 3360,
+          "height": 2240,
+          "device": "RICOH GR III",
+          "uploadId": "56ec0ead-6b71-e2c5-f1db-f9d51803e5e4"
         }
       ]
     },
