@@ -160,6 +160,42 @@
           "height": 3360,
           "device": "iPhone 15 Pro",
           "uploadId": "d65921a6-b123-6bbc-7021-207f6c49ad46"
+        },
+        {
+          "id": "6577dae7-98d8-5a6a-c67d-0c180f2e1897-0",
+          "src": "/photography/uploads/6577dae7-98d8-5a6a-c67d-0c180f2e1897-0.jpg",
+          "alt": "Changbai Mountain",
+          "width": 3360,
+          "height": 2520,
+          "device": "iPhone 15 Pro",
+          "uploadId": "6577dae7-98d8-5a6a-c67d-0c180f2e1897"
+        },
+        {
+          "id": "6577dae7-98d8-5a6a-c67d-0c180f2e1897-1",
+          "src": "/photography/uploads/6577dae7-98d8-5a6a-c67d-0c180f2e1897-1.jpg",
+          "alt": "Changbai Mountain",
+          "width": 2520,
+          "height": 3360,
+          "device": "iPhone 15 Pro",
+          "uploadId": "6577dae7-98d8-5a6a-c67d-0c180f2e1897"
+        },
+        {
+          "id": "6577dae7-98d8-5a6a-c67d-0c180f2e1897-2",
+          "src": "/photography/uploads/6577dae7-98d8-5a6a-c67d-0c180f2e1897-2.jpg",
+          "alt": "Changbai Mountain",
+          "width": 2520,
+          "height": 3360,
+          "device": "iPhone 15 Pro",
+          "uploadId": "6577dae7-98d8-5a6a-c67d-0c180f2e1897"
+        },
+        {
+          "id": "6577dae7-98d8-5a6a-c67d-0c180f2e1897-3",
+          "src": "/photography/uploads/6577dae7-98d8-5a6a-c67d-0c180f2e1897-3.jpg",
+          "alt": "Changbai Mountain",
+          "width": 2520,
+          "height": 3360,
+          "device": "iPhone 15 Pro",
+          "uploadId": "6577dae7-98d8-5a6a-c67d-0c180f2e1897"
         }
       ]
     },
