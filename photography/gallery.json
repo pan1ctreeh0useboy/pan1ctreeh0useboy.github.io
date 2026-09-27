@@ -565,6 +565,33 @@
           "height": 2520,
           "device": "iPhone 15 Pro",
           "uploadId": "28562653-036a-a231-e103-58ea5e272903"
+        },
+        {
+          "id": "0a14a68d-73ea-25fd-fbce-2d213999216b-0",
+          "src": "/photography/uploads/0a14a68d-73ea-25fd-fbce-2d213999216b-0.jpg",
+          "alt": "Jakarta",
+          "width": 2520,
+          "height": 3360,
+          "device": "iPhone 15 Pro",
+          "uploadId": "0a14a68d-73ea-25fd-fbce-2d213999216b"
+        },
+        {
+          "id": "0a14a68d-73ea-25fd-fbce-2d213999216b-1",
+          "src": "/photography/uploads/0a14a68d-73ea-25fd-fbce-2d213999216b-1.jpg",
+          "alt": "Jakarta",
+          "width": 2520,
+          "height": 3360,
+          "device": "iPhone 15 Pro",
+          "uploadId": "0a14a68d-73ea-25fd-fbce-2d213999216b"
+        },
+        {
+          "id": "0a14a68d-73ea-25fd-fbce-2d213999216b-2",
+          "src": "/photography/uploads/0a14a68d-73ea-25fd-fbce-2d213999216b-2.jpg",
+          "alt": "Jakarta",
+          "width": 2520,
+          "height": 3360,
+          "device": "iPhone 15 Pro",
+          "uploadId": "0a14a68d-73ea-25fd-fbce-2d213999216b"
         }
       ]
     }
