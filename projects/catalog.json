@@ -3,7 +3,7 @@
   "projects": [
     {
       "id": "takeuhighercake-taipei-june-order-poster",
-      "revision": null,
+      "revision": "af286a6f-b9b2-4e96-9b93-0adba60d9c4d",
       "title": "Takeuhighercake Taipei June Order Poster",
       "date": "2025-05-24",
       "type": "Graphic Design",
@@ -15,7 +15,12 @@
         "bilibili": ""
       },
       "images": [
-        { "src": "/thcake.jpg", "width": 3508, "height": 4961, "caption": "fig.1 Poster" }
+        {
+          "src": "/thcake.jpg",
+          "width": 3508,
+          "height": 4961,
+          "caption": "fig.1 Poster"
+        }
       ]
     }
   ]
