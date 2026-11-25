@@ -30,6 +30,7 @@
       position: absolute;
       top: 0;
       left: 0;
+      width: 100%;
       font-family: 'Inconsolata', monospace;
       font-size: 16pt;
       line-height: 16pt;
@@ -37,15 +38,19 @@
       white-space: nowrap;
     }
 
-    .label div:last-child {
+    .description {
       white-space: normal;
-      max-width: 80vw;
-      color: #fff;
       padding: 2px 0;
     }
 
-    .label div:nth-child(1) { margin-bottom: 11.2pt; }
-    .label div:nth-child(2) { margin-bottom: 13.6pt; }
+    .about { margin-bottom: 11.2pt; }
+
+    .design-title {
+      width: max-content;
+      font-size: calc(80vw / var(--title-width-in-em, 16.8));
+      line-height: 1;
+      margin-bottom: 0.85em;
+    }
 
     .back-link {
       position: absolute;
@@ -59,16 +64,14 @@
     .back-link:hover { text-decoration: underline; }
 
     .gif-container {
-      position: absolute;
-      left: 0;
-      height: 14pt; /* 固定高度 */
-      overflow: hidden; /* 防止图片超出容器 */
+      width: var(--last-line-width, 0px);
+      height: 14pt;
+      overflow: hidden;
     }
     .gif-container img {
-      height: 100%; /* 高度固定 */
-      width: 100%;  /* 宽度随容器调整 */
+      height: 100%;
+      width: 100%;
       display: block;
-      object-fit: fill; /* 强制拉伸宽度 */
     }
   </style>
 </head>
@@ -76,70 +79,40 @@
   <div class="wrap">
     <div class="box">
       <div class="label">
-        <div>ABOUT</div>
-        <div>Motion design/Graphic design</div>
-        <div>The only way you can learn about me is by engaging with my works.</div>
+        <div class="about">ABOUT</div>
+        <div class="design-title">Motion design/Graphic design</div>
+        <div class="description">The only way you can learn about me is by engaging with my works.</div>
+        <div class="gif-container">
+          <img src="l05.gif" alt="l05 animation" width="532" height="24" fetchpriority="high" />
+        </div>
       </div>
       <a class="back-link" href="pan1ctreeh0useboy.github.io/mobile.html">Back</a>
-      <div class="gif-container">
-        <img src="l05.gif" alt="l05 animation" />
-      </div>
     </div>
   </div>
 
   <script>
-    function adjustLayout() {
-      const secondDiv = document.querySelector('.label div:nth-child(2)');
-      const originalFontSize = 16;
-      const originalLineHeight = 16;
-      const originalMarginBottom = 13.6;
+    (() => {
+      const title = document.querySelector('.design-title');
+      const description = document.querySelector('.description');
+      const gif = document.querySelector('.gif-container');
 
-      // Reset to original to measure natural width
-      secondDiv.style.fontSize = `${originalFontSize}pt`;
-      secondDiv.style.lineHeight = `${originalLineHeight}pt`;
-      secondDiv.style.marginBottom = `${originalMarginBottom}pt`;
+      // 标题只测一次字宽，之后由 CSS 随视口缩放。
+      const titleFontSize = parseFloat(getComputedStyle(title).fontSize);
+      const titleWidthInEm = title.getBoundingClientRect().width / titleFontSize;
+      title.style.setProperty('--title-width-in-em', titleWidthInEm);
 
-      const naturalWidth = secondDiv.getBoundingClientRect().width;
-      const targetWidth = window.innerWidth * 0.8;
+      const range = document.createRange();
+      range.selectNodeContents(description);
 
-      if (naturalWidth > 0) {
-        const scaleFactor = targetWidth / naturalWidth;
-        const newFontSize = originalFontSize * scaleFactor;
-        const newLineHeight = originalLineHeight * scaleFactor;
-        const newMarginBottom = originalMarginBottom * scaleFactor;
-
-        secondDiv.style.fontSize = `${newFontSize}pt`;
-        secondDiv.style.lineHeight = `${newLineHeight}pt`;
-        secondDiv.style.marginBottom = `${newMarginBottom}pt`;
+      function fitGifToLastLine() {
+        const lines = range.getClientRects();
+        const lastLine = lines[lines.length - 1];
+        if (lastLine) gif.style.setProperty('--last-line-width', `${lastLine.width}px`);
       }
 
-      // Now adjust GIF
-      const textDiv = document.querySelector('.label div:last-child');
-      const gifContainer = document.querySelector('.gif-container');
-
-      // 获取文本最后一行的宽度
-      const range = document.createRange();
-      const textNode = Array.from(textDiv.childNodes).find(n => n.nodeType === Node.TEXT_NODE);
-      if (!textNode) return;
-
-      range.selectNodeContents(textNode);
-      const rects = range.getClientRects();
-      if (!rects.length) return;
-
-      const lastRect = rects[rects.length - 1];
-      const lastLineWidth = lastRect.width;
-
-      // 设置 GIF 宽度为最后一行宽度
-      gifContainer.style.width = `${lastLineWidth}px`;
-
-      // 设置 GIF 顶部位置在文本底部
-      const boxRect = document.querySelector('.box').getBoundingClientRect();
-      const textBottom = textDiv.getBoundingClientRect().bottom - boxRect.top;
-      gifContainer.style.top = `${textBottom}px`;
-    }
-
-    window.addEventListener('load', adjustLayout);
-    window.addEventListener('resize', adjustLayout);
+      fitGifToLastLine();
+      window.addEventListener('resize', fitGifToLastLine);
+    })();
   </script>
 </body>
 </html>

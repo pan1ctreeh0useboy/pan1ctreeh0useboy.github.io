@@ -4,8 +4,19 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>!About!</title>
+  <link rel="preload" href="assets/inconsolata-COBzwqDs.ttf" as="font" type="font/ttf" crossorigin>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inconsolata&display=swap');
+    @font-face {
+      font-family: 'Inconsolata';
+      src: url('assets/inconsolata-COBzwqDs.ttf') format('truetype');
+      font-display: optional;
+    }
+
+    @font-face {
+      font-family: 'Inconsolata Fallback';
+      src: local('Courier New'), local('Liberation Mono');
+      size-adjust: 83.33%;
+    }
 
     html, body {
       height: 100%;
@@ -21,6 +32,9 @@
 
     /* 外框（16:9，高 = 100vh）*/
     .frame {
+      --copy-font-size: 0.7vw;
+      --copy-line-height: 0.6vw;
+      --gif-left: calc(72.1 / 1920 * 100vw);
       height: 100vh;
       width: calc(100vh * 16 / 9);
       box-sizing: border-box;
@@ -45,7 +59,7 @@
     /* About / Back 文本（压线） */
     .label {
       position: absolute;
-      font-family: 'Inconsolata', monospace;
+      font-family: 'Inconsolata', 'Inconsolata Fallback', monospace;
       font-size: 0.7vw;
       line-height: 0.6vw;
       color: #fff;
@@ -88,9 +102,9 @@
       left: calc(93.1 / 1920 * 100%);       /* 与红色垂直线 x 相同 -> 左边缘在垂直线处（右侧起点） */
 
       z-index: 2;                            /* 文字盖在红线之上，若需看见线可降 z-index */
-      font-family: 'Inconsolata', monospace;
-      font-size: 0.7vw;
-      line-height: 0.6vw;
+      font-family: 'Inconsolata', 'Inconsolata Fallback', monospace;
+      font-size: var(--copy-font-size);
+      line-height: var(--copy-line-height);
       color: white;
       white-space: nowrap;
       text-align: left;
@@ -104,23 +118,25 @@
 
     /* 小屏调整（必要时） */
     @media (max-width: 500px) {
-      .fixed-text { font-size: 1.6vw; line-height: 1.3vw; }
+      .frame {
+        --copy-font-size: 1.6vw;
+        --copy-line-height: 1.3vw;
+      }
     }
 
-    /* GIF 元素：位于文本正下方，紧贴垂直参考线右侧内侧（左边缘紧贴垂直线） */
     .gif-element {
       position: absolute;
-      top: calc((130.3 / 1080) * 100vh + 1.2vw); /* 高度相对视口 */
-      left: calc((72.1 / 1920) * 100vw);        /* 左边相对视口宽 */
-      width: calc(1920 * 0.61 / 1920 * 100vw);  /* 按原比例计算宽度（初始） */
-      height: auto;                             /* 高度自适应 */
+      top: calc(130.3 / 1080 * 100vh + 2 * var(--copy-line-height));
+      left: var(--gif-left);
+      font-size: var(--copy-font-size);
+      /* 正文有 65 个字符，Inconsolata 每个字符宽 0.5em。 */
+      width: min(32.5em, 61vw, max(0px, 100% - var(--gif-left) - 30px));
       z-index: 2;
-      background: transparent;
     }
 
     .gif-element img {
       display: block;
-      max-width: 100%;  /* 防止溢出，可根据需要调整大小 */
+      width: 100%;
       height: auto;
     }
   </style>
@@ -137,81 +153,14 @@
     <!-- 焦点文字组：上边缘压紧红色水平线，位于垂直线右侧起点 -->
     <div class="fixed-text">
 Motion design/Graphic Design<br>
-<!-- 把目标那一行单独用 span 包起来，JS 会精确读取它的宽度 -->
-<span id="target-line">The only way you can learn about me is by engaging with my works.</span>
+The only way you can learn about me is by engaging with my works.
     </div>
 
     <!-- GIF 元素 -->
     <div class="gif-element">
-      <img src="l05.gif" alt="Animated GIF" id="responsive-gif">
+      <img src="l05.gif" alt="Animated GIF" width="532" height="24" fetchpriority="high">
     </div>
   </div>
 
-  <script>
-    (function () {
-      const target = document.getElementById('target-line');
-      const gifImg = document.getElementById('responsive-gif');
-      const frame = document.querySelector('.frame');
-
-      if (!target || !gifImg || !frame) return;
-
-      // 将多次触发合并（节流）
-      let raf = null;
-      function scheduleUpdate() {
-        if (raf) cancelAnimationFrame(raf);
-        raf = requestAnimationFrame(() => {
-          raf = null;
-          updateGifSize();
-        });
-      }
-
-      function updateGifSize() {
-        // 获取目标文字的渲染宽度（精确到 CSS 像素）
-        const targetRect = target.getBoundingClientRect();
-        let desiredWidth = Math.ceil(targetRect.width);
-
-        // 计算 GIF 左侧的屏幕坐标与 frame 右侧可用空间（保留 32px 内边距）
-        const gifLeft = gifImg.getBoundingClientRect().left;
-        const frameRight = frame.getBoundingClientRect().right - 32; // 避免触碰边距
-        const available = Math.max(0, Math.floor(frameRight - gifLeft));
-
-        // 如果目标文字宽度超出可用空间，就压缩到可用空间（以防溢出）
-        const finalWidth = Math.min(desiredWidth, available || desiredWidth);
-
-        // 应用到 GIF（只改宽度，保持高度 auto => 保持比例）
-        gifImg.style.width = finalWidth + 'px';
-        gifImg.style.height = 'auto';
-      }
-
-      // 等待字体加载完成以获取准确宽度（Inconsolata）
-      if (document.fonts && document.fonts.ready) {
-        document.fonts.ready.then(() => {
-          scheduleUpdate();
-        }).catch(() => {
-          scheduleUpdate();
-        });
-      } else {
-        // 回退
-        window.addEventListener('load', scheduleUpdate);
-      }
-
-      // 在窗口改变尺寸时更新
-      window.addEventListener('resize', scheduleUpdate);
-
-      // 监听目标文本尺寸变化（例如：字体加载、样式调整、DOM 变化等）
-      if (window.ResizeObserver) {
-        const ro = new ResizeObserver(scheduleUpdate);
-        ro.observe(target);
-        ro.observe(frame);
-      } else {
-        // 兼容回退：观察 DOM mutations 简单触发
-        const mo = new MutationObserver(scheduleUpdate);
-        mo.observe(target, { childList: true, characterData: true, subtree: true });
-      }
-
-      // 初始呼叫（防止某些环境不触发 fonts.ready）
-      scheduleUpdate();
-    })();
-  </script>
 </body>
 </html>
