@@ -4,182 +4,29 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
   <title>!Projects!</title>
+  <link rel="stylesheet" href="/projects/mobile.css" />
   <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      background: black;
-      font-family: 'Inconsolata', monospace;
-      color: #fff;
-    }
-
-    .wrap {
-      height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .box {
-      width: 80vw;
-      height: 80vh;
-      position: relative;
-      background: transparent;
-    }
-
-    .label {
-      font-size: 16pt;
-      line-height: 16pt;
-      margin-bottom: 12pt;
-    }
-
-    .meta {
-      margin-left: 0;
-      margin-bottom: 6pt;
-      font-size: 16pt;
-    }
-
-    /* 滑动区域，隐藏滚动条 */
-    .slider {
-      margin-top: 52.4pt;
-      display: flex;
-      overflow-x: auto;
-      scroll-snap-type: x mandatory;
-      -webkit-overflow-scrolling: touch;
-      gap: 24pt;
-      padding-bottom: 12pt;
-
-      scrollbar-width: none; /* Firefox */
-      -ms-overflow-style: none; /* IE 10+ */
-    }
-    .slider::-webkit-scrollbar {
-      display: none; /* Chrome, Safari, Opera */
-    }
-
-    .slide {
-      flex: 0 0 auto;
-      width: 80vw;   /* 整个slide宽度 = 80vw */
-      display: flex;
-      align-items: flex-start;
-      scroll-snap-align: start;
-      border: 1px solid transparent;
-      position: relative;
-      background: transparent;
-    }
-
-    .vertical-text {
-      writing-mode: vertical-rl;
-      transform: rotate(360deg);
-      font-family: 'Times New Roman', Times, serif;
-      font-style: italic;
-      font-size: 12.5pt;
-      letter-spacing: 0pt;
-      padding: 4pt;
-      white-space: nowrap;
-      color: #fff;
-      margin-right: 4pt;
-    }
-
-    /* 图片完整显示，占满剩余宽度 */
-    .slide img {
-      max-width: calc(80vw - 20pt); /* 留一点空间给竖排文字 */
-      height: auto;
+    .wrap { height: auto; min-height: 100vh; align-items: flex-start; }
+    .box { height: auto; min-height: 80vh; margin: 10vh 0; }
+    .project-band { position: relative; width: 100%; }
+    .project-cover { position: absolute; display: block; }
+    .project-cover img {
+      position: absolute;
+      inset: 5%;
+      width: 90%;
+      height: 90%;
+      object-fit: contain;
       display: block;
     }
-
-    /* Behance 图标 */
-    .behance-icon {
-      margin-top: 67pt;
-      height: 13.8pt;
-      width: auto;
-    }
-    .behance-icon img {
-      height: 100%;
-      width: auto;
-      display: block;
-    }
-
-    /* Vimeo 图标 */
-    .vimeo-icon {
-      margin-top: 38.4pt;
-      height: 19.1pt;
-      width: auto;
-    }
-    .vimeo-icon img {
-      height: 100%;
-      width: auto;
-      display: block;
-      filter: grayscale(100%) brightness(70%);
-    }
-
-    /* YouTube 图标 */
-    .youtube-icon {
-      margin-top: 55.1pt;
-      height: 16.6pt;
-      width: auto;
-    }
-    .youtube-icon img {
-      height: 100%;
-      width: auto;
-      display: block;
-      filter: grayscale(100%) brightness(70%);
-    }
-
-    /* Bilibili 图标 */
-    .bilibili-icon {
-      margin-top: 50.4pt;
-      height: 25.3pt;
-      width: auto;
-    }
-    .bilibili-icon img {
-      height: 100%;
-      width: auto;
-      display: block;
-      filter: grayscale(100%) brightness(70%);
-    }
-
   </style>
+  <script type="module" src="/projects/mobile.js"></script>
 </head>
 <body>
   <div class="wrap">
-    <div class="box">
+    <main class="box">
       <div class="label">Projects</div>
-      <div class="meta">Takeuhighercake Taipei June Order Poster</div>
-      <div class="meta">25.05.24</div>
-      <div class="meta">Graphic Design</div>
-
-      <!-- 滑动内容 -->
-      <div class="slider">
-        <div class="slide">
-          <div class="vertical-text">fig.1 Poster</div>
-          <img src="thcake.jpg" alt="Project Image">
-        </div>
-      </div>
-
-      <!-- Behance 图标 + 链接 -->
-      <div class="behance-icon">
-        <a href="https://www.behance.net/gallery/234961621/Takeuhigercake-Taipei-June-Order-Poster" target="_blank">
-          <img src="behance.svg" alt="Behance">
-        </a>
-      </div>
-
-      <!-- Vimeo 图标 -->
-      <div class="vimeo-icon">
-        <img src="vimeo.svg" alt="Vimeo">
-      </div>
-      
-      <!-- YouTube 图标 -->
-      <div class="youtube-icon">
-        <img src="youtube.svg" alt="YouTube">
-      </div>
-
-      <!-- Bilibili 图标 -->
-      <div class="bilibili-icon">
-        <img src="bilibili.svg" alt="Bilibili">
-      </div>
-
-    </div>
+      <div id="projects-feed"></div>
+    </main>
   </div>
 </body>
 </html>

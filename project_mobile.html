@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <title>!Projects!</title>
+  <link rel="stylesheet" href="/projects/mobile.css" />
+  <script type="module" src="/projects/detail.js"></script>
+</head>
+<body>
+  <div class="wrap">
+    <div class="box" id="project" hidden>
+      <div class="label">Projects</div>
+      <div class="meta" id="project-title"></div>
+      <div class="meta" id="project-date"></div>
+      <div class="meta" id="project-type"></div>
+
+      <div class="slider"></div>
+
+      <template id="slide-template">
+        <div class="slide">
+          <div class="vertical-text"></div>
+          <img alt="Project Image">
+        </div>
+      </template>
+
+      <div class="behance-icon">
+        <img src="behance.svg" alt="Behance">
+      </div>
+
+      <!-- Vimeo 图标 -->
+      <div class="vimeo-icon">
+        <img src="vimeo.svg" alt="Vimeo">
+      </div>
+
+      <!-- YouTube 图标 -->
+      <div class="youtube-icon">
+        <img src="youtube.svg" alt="YouTube">
+      </div>
+
+      <!-- Bilibili 图标 -->
+      <div class="bilibili-icon">
+        <img src="bilibili.svg" alt="Bilibili">
+      </div>
+
+    </div>
+    <div class="box" id="project-error" hidden><div class="label">Projects</div>Project not found.</div>
+  </div>
+</body>
+</html>

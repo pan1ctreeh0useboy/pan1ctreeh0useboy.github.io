@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "projects": [
+    {
+      "id": "takeuhighercake-taipei-june-order-poster",
+      "revision": null,
+      "title": "Takeuhighercake Taipei June Order Poster",
+      "date": "2025-05-24",
+      "type": "Graphic Design",
+      "format": "a3",
+      "links": {
+        "behance": "https://www.behance.net/gallery/234961621/Takeuhigercake-Taipei-June-Order-Poster",
+        "vimeo": "",
+        "youtube": "",
+        "bilibili": ""
+      },
+      "images": [
+        { "src": "/thcake.jpg", "width": 3508, "height": 4961, "caption": "fig.1 Poster" }
+      ]
+    }
+  ]
+}

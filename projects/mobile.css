@@ -1,0 +1,133 @@
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: black;
+      font-family: 'Inconsolata', monospace;
+      color: #fff;
+    }
+
+    .wrap {
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .box {
+      width: 80vw;
+      height: 80vh;
+      position: relative;
+      background: transparent;
+    }
+
+    .label {
+      font-size: 16pt;
+      line-height: 16pt;
+      margin-bottom: 12pt;
+    }
+
+    .meta {
+      margin-left: 0;
+      margin-bottom: 6pt;
+      font-size: 16pt;
+    }
+
+    /* 滑动区域，隐藏滚动条 */
+    .slider {
+      margin-top: 52.4pt;
+      display: flex;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      gap: 24pt;
+      padding-bottom: 12pt;
+
+      scrollbar-width: none; /* Firefox */
+      -ms-overflow-style: none; /* IE 10+ */
+    }
+    .slider::-webkit-scrollbar {
+      display: none; /* Chrome, Safari, Opera */
+    }
+
+    .slide {
+      flex: 0 0 auto;
+      width: 80vw;   /* 整个slide宽度 = 80vw */
+      display: flex;
+      align-items: flex-start;
+      scroll-snap-align: start;
+      border: 1px solid transparent;
+      position: relative;
+      background: transparent;
+    }
+
+    .vertical-text {
+      writing-mode: vertical-rl;
+      transform: rotate(360deg);
+      font-family: 'Times New Roman', Times, serif;
+      font-style: italic;
+      font-size: 12.5pt;
+      letter-spacing: 0pt;
+      padding: 4pt;
+      white-space: nowrap;
+      color: #fff;
+      margin-right: 4pt;
+    }
+
+    /* 图片完整显示，占满剩余宽度 */
+    .slide img {
+      max-width: calc(80vw - 20pt); /* 留一点空间给竖排文字 */
+      height: auto;
+      display: block;
+    }
+
+    /* Behance 图标 */
+    .behance-icon {
+      margin-top: 67pt;
+      height: 13.8pt;
+      width: auto;
+    }
+    .behance-icon img {
+      height: 100%;
+      width: auto;
+      display: block;
+    }
+
+    /* Vimeo 图标 */
+    .vimeo-icon {
+      margin-top: 38.4pt;
+      height: 19.1pt;
+      width: auto;
+    }
+    .vimeo-icon img {
+      height: 100%;
+      width: auto;
+      display: block;
+      filter: grayscale(100%) brightness(70%);
+    }
+
+    /* YouTube 图标 */
+    .youtube-icon {
+      margin-top: 55.1pt;
+      height: 16.6pt;
+      width: auto;
+    }
+    .youtube-icon img {
+      height: 100%;
+      width: auto;
+      display: block;
+      filter: grayscale(100%) brightness(70%);
+    }
+
+    /* Bilibili 图标 */
+    .bilibili-icon {
+      margin-top: 50.4pt;
+      height: 25.3pt;
+      width: auto;
+    }
+    .bilibili-icon img {
+      height: 100%;
+      width: auto;
+      display: block;
+      filter: grayscale(100%) brightness(70%);
+    }
