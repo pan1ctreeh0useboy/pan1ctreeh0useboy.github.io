@@ -16,12 +16,17 @@ async function getCatalog(url, options) {
   return catalog.projects;
 }
 
-export async function readProjects() {
+async function readLiveProjects() {
+  const api = await uploadService();
+  return getCatalog(api + '/projects/catalog', {signal: AbortSignal.timeout(4500)});
+}
+
+export async function readProjects({staticFirst = false} = {}) {
+  const readStatic = () => getCatalog('/projects/catalog.json');
   try {
-    const api = await uploadService();
-    return await getCatalog(api + '/projects/catalog', {signal: AbortSignal.timeout(4500)});
+    return await (staticFirst ? readStatic() : readLiveProjects());
   } catch {
-    return getCatalog('/projects/catalog.json');
+    return staticFirst ? readLiveProjects() : readStatic();
   }
 }
 

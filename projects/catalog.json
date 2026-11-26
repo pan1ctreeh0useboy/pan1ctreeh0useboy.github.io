@@ -21,6 +21,7 @@
         "height": 1080,
         "cover": {
           "src": "/projects/uploads/6d7bd44f-1497-4c2e-81ae-f58c23dd62ad-video.jpg",
+          "thumbnailSrc": "/projects/covers/crowcon-6d7bd44f.webp",
           "width": 1080,
           "height": 1080
         }
@@ -42,6 +43,7 @@
       "images": [
         {
           "src": "/thcake.jpg",
+          "thumbnailSrc": "/projects/covers/takeuhighercake.webp",
           "width": 3508,
           "height": 4961,
           "caption": "fig.1 Poster"

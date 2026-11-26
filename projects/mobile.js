@@ -1,4 +1,4 @@
-import { readProjects, setProjectImage } from './catalog.js';
+import { readProjects, setProjectImage } from './catalog.js?v=fast-feed';
 import { chooseLayout, dividers } from './layout.js';
 import { formats } from './formats.js';
 
@@ -43,8 +43,11 @@ function draw(projects) {
       detail.style.inset = inset.map(value => (Math.max(0, value) * 100).toFixed(6) + '%').join(' ');
       const img = document.createElement('img');
       img.alt = project.title;
-      if (start) img.loading = 'lazy';
-      setProjectImage(img, project.images?.[0] ?? project.video.cover);
+      img.decoding = 'async';
+      if (start || index > 1) img.loading = 'lazy';
+      else if (index === 0) img.fetchPriority = 'high';
+      const cover = project.images?.[0] ?? project.video.cover;
+      setProjectImage(img, cover.thumbnailSrc ? {...cover, src: cover.thumbnailSrc, fallbackSrc: cover.src} : cover);
       if (project.video) {
         const media = project.video;
         const video = document.createElement('video');
@@ -72,7 +75,7 @@ function draw(projects) {
 }
 
 try {
-  const projects = (await readProjects())
+  const projects = (await readProjects({staticFirst: true}))
     .filter(project => Object.hasOwn(formats, project.format) && (project.images?.length || project.video?.cover))
     .map(project => ({project, format: formats[project.format]}));
   draw(projects);

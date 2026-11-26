@@ -4,6 +4,10 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
   <title>!Projects!</title>
+  <link rel="preload" href="/projects/catalog.json" as="fetch" crossorigin>
+  <link rel="modulepreload" href="/projects/catalog.js?v=fast-feed">
+  <link rel="modulepreload" href="/projects/layout.js">
+  <link rel="modulepreload" href="/projects/formats.js">
   <link rel="stylesheet" href="/projects/mobile.css" />
   <style>
     .wrap { height: auto; min-height: 100vh; align-items: flex-start; }
@@ -21,7 +25,7 @@
     .project-cover video { pointer-events: none; }
     .project-cover.preview-playing video { z-index: 1; }
   </style>
-  <script type="module" src="/projects/mobile.js?v=video-preview"></script>
+  <script type="module" src="/projects/mobile.js?v=fast-feed"></script>
 </head>
 <body>
   <div class="wrap">
