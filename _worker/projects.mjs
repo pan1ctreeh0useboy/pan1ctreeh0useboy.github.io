@@ -64,8 +64,11 @@ export async function parseProjectSave(request) {
   for (const [key, platform] of Object.entries(platforms)) {
     const url = input.links?.[key] ?? '';
     check(typeof url === 'string' && url.length <= 2048, `Enter a valid ${platform.label} link.`);
-    links[key] = url.trim() ? platformUrl(key, url.trim()) : '';
-    check(!url.trim() || links[key], `Enter an HTTPS link from ${platform.label}.`);
+    const value = url.trim();
+    if (!value) continue;
+    const href = platformUrl(key, value);
+    check(href, `Enter an HTTPS link from ${platform.label}.`);
+    links[key] = href;
   }
 
   const files = form.getAll('images');
