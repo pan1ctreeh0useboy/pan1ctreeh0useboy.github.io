@@ -25,7 +25,7 @@
     },
     {
       "id": "a0dc9cb0-a076-44b6-8a85-ddf6b1b1652c",
-      "revision": "82d63743-808a-482d-ac86-ac936e8313d3",
+      "revision": "35f128ee-c7a7-4c53-90cc-7de33890488e",
       "title": "Isometric 3D View for Crowcon @DCWA Singapore 2026",
       "date": "2026-09-04",
       "type": "Motion Design/3D Modeling",
@@ -36,7 +36,22 @@
         "youtube": "",
         "bilibili": ""
       },
-      "images": [],
+      "images": [
+        {
+          "src": "/projects/uploads/35f128ee-c7a7-4c53-90cc-7de33890488e-0.jpg",
+          "width": 2632,
+          "height": 2160,
+          "homepageFormat": "square",
+          "thumbnailSrc": "/projects/uploads/35f128ee-c7a7-4c53-90cc-7de33890488e-card-0.webp"
+        },
+        {
+          "src": "/projects/uploads/35f128ee-c7a7-4c53-90cc-7de33890488e-1.png",
+          "width": 2160,
+          "height": 2641,
+          "homepageFormat": "auto",
+          "thumbnailSrc": "/projects/uploads/35f128ee-c7a7-4c53-90cc-7de33890488e-card-1.webp"
+        }
+      ],
       "video": {
         "src": "/projects/uploads/6d7bd44f-1497-4c2e-81ae-f58c23dd62ad.mp4",
         "animatedPreviewSrc": "/projects/covers/crowcon-6d7bd44f-loop.webp",
@@ -48,7 +63,9 @@
           "width": 1080,
           "height": 1080
         }
-      }
+      },
+      "videoIndex": 0,
+      "coverRatio": 1
     },
     {
       "id": "takeuhighercake-taipei-june-order-poster",
