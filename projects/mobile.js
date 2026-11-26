@@ -1,6 +1,7 @@
 import { readProjects, setProjectImage } from './catalog.js?v=fast-feed';
 import { chooseLayout, dividers } from './layout.js';
 import { formats } from './formats.js';
+import { homepageCover } from './media-order.js';
 
 const feed = document.querySelector('#projects-feed');
 const projectsPerBand = 6;
@@ -115,7 +116,7 @@ function draw(projects) {
       img.decoding = 'async';
       if (start || index > 1) img.loading = 'lazy';
       else if (index === 0) img.fetchPriority = 'high';
-      const cover = project.images?.[0] ?? project.video.cover;
+      const cover = homepageCover(project);
       setProjectImage(img, cover.thumbnailSrc ? {...cover, src: cover.thumbnailSrc, fallbackSrc: cover.src} : cover);
       detail.append(img);
       if (project.video) addPreview(detail, project.video);
@@ -129,7 +130,10 @@ function draw(projects) {
 try {
   const projects = (await readProjects({staticFirst: true}))
     .filter(project => Object.hasOwn(formats, project.format) && (project.images?.length || project.video?.cover))
-    .map(project => ({project, format: formats[project.format]}));
+    .map(project => {
+      const preset = formats[project.format];
+      return {project, format: {...preset, ratio: project.coverRatio ?? preset.ratio}};
+    });
   draw(projects);
   compact.addEventListener('change', () => draw(projects));
 } catch (error) {

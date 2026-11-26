@@ -1,12 +1,13 @@
 import { uploadService, setProjectImage } from './catalog.js';
-import { formats, platforms } from './formats.js';
+import { platforms } from './formats.js';
 import { imageThumbnail, videoPreviews } from './media-previews.js';
+import { orderedMedia } from './media-order.js';
 
 const login = document.querySelector('#login-form');
 const editor = document.querySelector('#editor');
 const form = document.querySelector('#project-form');
 const status = document.querySelector('#admin-status');
-const currentImages = document.querySelector('#current-images');
+const mediaList = document.querySelector('#project-media');
 const selected = form.elements.project;
 const deleteButton = document.querySelector('#delete-project');
 const maxFileSize = 24 * 1024 * 1024;
@@ -17,8 +18,7 @@ let projects = [];
 let newId;
 let revision;
 let busy = false;
-
-for (const [key, {label}] of Object.entries(formats)) form.elements.format.add(new Option(label, key));
+let media = [];
 
 async function api(path, options = {}) {
   apiBase ||= await uploadService();
@@ -34,37 +34,83 @@ async function api(path, options = {}) {
   return result;
 }
 
+function releasePreviews() {
+  for (const item of media) {
+    if (item.previewUrl) URL.revokeObjectURL(item.previewUrl);
+  }
+}
+
+function renderMedia() {
+  mediaList.replaceChildren();
+  for (const [index, item] of media.entries()) {
+    const row = document.createElement('li');
+    row.className = 'photo-list-item';
+    const img = document.createElement('img');
+    img.className = 'photo-thumb';
+    img.alt = '';
+    img.loading = 'lazy';
+    const image = item.image ?? item.video?.cover;
+    const fallbackSrc = image?.src.startsWith('/projects/uploads/')
+      ? `https://raw.githubusercontent.com/pan1ctreeh0useboy/pan1ctreeh0useboy.github.io/main${image.src}`
+      : image?.src;
+    if (item.previewUrl) img.src = item.previewUrl;
+    else if (image) setProjectImage(img, {...image, src: image.thumbnailSrc ?? image.src, fallbackSrc});
+
+    const label = document.createElement('span');
+    label.className = 'media-label';
+    const name = item.file?.name ?? (item.kind === 'video' ? 'Video' : `Image ${item.index + 1}`);
+    label.textContent = `${index === 0 ? 'Cover · ' : ''}${name}`;
+
+    const actions = document.createElement('span');
+    actions.className = 'media-actions';
+    for (const [delta, arrow, direction] of [[-1, '↑', 'up'], [1, '↓', 'down']]) {
+      const move = document.createElement('button');
+      move.type = 'button';
+      move.textContent = arrow;
+      move.setAttribute('aria-label', `Move item ${index + 1} ${direction}`);
+      const next = index + delta;
+      move.disabled = next < 0 || next >= media.length;
+      move.addEventListener('click', () => {
+        [media[next], media[index]] = [media[index], media[next]];
+        revision = crypto.randomUUID();
+        renderMedia();
+        const buttons = [...mediaList.children[next].querySelectorAll('button')];
+        (buttons.find(button => button.textContent === arrow && !button.disabled) ??
+          buttons.find(button => !button.disabled))?.focus();
+      });
+      actions.append(move);
+    }
+    if (item.file) {
+      const discard = document.createElement('button');
+      discard.type = 'button';
+      discard.textContent = '×';
+      discard.setAttribute('aria-label', `Discard ${name}`);
+      discard.addEventListener('click', () => {
+        if (item.previewUrl) URL.revokeObjectURL(item.previewUrl);
+        if (item.video) media[index] = {kind: 'video', video: item.video};
+        else media.splice(index, 1);
+        revision = crypto.randomUUID();
+        renderMedia();
+      });
+      actions.append(discard);
+    }
+    const preview = img.hasAttribute('src') ? img : document.createElement('span');
+    row.append(preview, label, actions);
+    mediaList.append(row);
+  }
+}
+
 function showProject() {
   const project = projects.find(item => item.id === selected.value);
   deleteButton.hidden = !project;
   for (const key of ['title', 'type', 'date']) form.elements[key].value = project?.[key] ?? '';
-  form.elements.format.value = project?.format ?? 'a3';
   form.elements.images.value = '';
   form.elements.video.value = '';
   for (const key of Object.keys(platforms)) form.elements[key].value = project?.links?.[key] ?? '';
 
-  currentImages.replaceChildren();
-  const media = (project?.images ?? []).map((image, index) => ({
-    image, label: index === 0 ? 'Cover' : `Image ${index + 1}`,
-  }));
-  if (project?.video) media.push({image: project.video.cover, label: 'Video'});
-  for (const {image, label} of media) {
-    const item = document.createElement('li');
-    item.className = 'photo-list-item';
-    const img = document.createElement('img');
-    img.className = 'photo-thumb';
-    img.alt = project.title;
-    img.loading = 'lazy';
-    const fallbackSrc = image.src.startsWith('/projects/uploads/')
-      ? `https://raw.githubusercontent.com/pan1ctreeh0useboy/pan1ctreeh0useboy.github.io/main${image.src}`
-      : undefined;
-    setProjectImage(img, {...image, src: image.thumbnailSrc ?? image.src, fallbackSrc: fallbackSrc ?? image.src});
-    const caption = document.createElement('span');
-    caption.textContent = label;
-    item.append(img, caption);
-    currentImages.append(item);
-  }
-
+  releasePreviews();
+  media = project ? orderedMedia(project) : [];
+  renderMedia();
   newId = crypto.randomUUID();
   revision = crypto.randomUUID();
 }
@@ -77,6 +123,8 @@ function showProjects(id = 'new') {
 
 function signOut() {
   token = '';
+  releasePreviews();
+  media = [];
   projects = [];
   editor.hidden = true;
   login.hidden = false;
@@ -86,6 +134,23 @@ function signOut() {
 
 selected.addEventListener('change', showProject);
 form.addEventListener('input', () => { revision = crypto.randomUUID(); });
+form.elements.images.addEventListener('change', () => {
+  for (const file of form.elements.images.files) {
+    media.push({kind: 'image', file, previewUrl: URL.createObjectURL(file)});
+  }
+  form.elements.images.value = '';
+  renderMedia();
+});
+form.elements.video.addEventListener('change', () => {
+  const file = form.elements.video.files[0];
+  if (!file) return;
+  const existing = media.find(item => item.kind === 'video');
+  if (existing) existing.file = file;
+  else media.push({kind: 'video', file});
+  form.elements.video.value = '';
+  renderMedia();
+});
+
 document.querySelector('#logout').addEventListener('click', signOut);
 
 login.addEventListener('submit', async event => {
@@ -143,8 +208,8 @@ form.addEventListener('submit', async event => {
   event.preventDefault();
   if (busy) return;
   const previous = projects.find(item => item.id === selected.value);
-  const files = Array.from(form.elements.images.files);
-  const video = form.elements.video.files[0];
+  const files = media.filter(item => item.kind === 'image' && item.file).map(item => item.file);
+  const video = media.find(item => item.kind === 'video')?.file;
   const size = files.reduce((total, file) => total + file.size, video?.size ?? 0);
   if ((!previous && !files.length && !video) || files.length > 10 || video?.size > maxFileSize ||
       files.some(file => file.size > maxFileSize) || size > maxUploadSize) {
@@ -159,15 +224,36 @@ form.addEventListener('submit', async event => {
   try {
     const payload = new FormData();
     const dimensions = [];
-    for (const [index, file] of files.entries()) {
+    for (const file of files) {
       const bitmap = await createImageBitmap(file);
       try {
         dimensions.push({width: bitmap.width, height: bitmap.height});
-        if (index === 0) payload.append('thumbnail', await imageThumbnail(bitmap), 'thumbnail');
+        if (file === media[0]?.file) payload.append('thumbnail', await imageThumbnail(bitmap), 'thumbnail');
       } finally {
         bitmap.close();
       }
     }
+    const first = media[0];
+    if (first?.image && !first.image.thumbnailSrc) {
+      try {
+        const response = await fetch(first.image.src);
+        if (response.ok) {
+          const bitmap = await createImageBitmap(await response.blob());
+          try {
+            payload.append('thumbnail', await imageThumbnail(bitmap), 'thumbnail');
+          } finally {
+            bitmap.close();
+          }
+        }
+      } catch {
+        // A missing original does not block a reorder.
+      }
+    }
+    let newImageIndex = 0;
+    const order = media.map(item => {
+      if (item.kind === 'video') return 'video';
+      return item.file ? `new:${newImageIndex++}` : `image:${item.index}`;
+    });
     let videoDimensions;
     let missingAnimation = false;
     if (video) {
@@ -179,9 +265,9 @@ form.addEventListener('submit', async event => {
       else missingAnimation = true;
     }
     payload.set('metadata', JSON.stringify({
-      id, revision, expectedRevision: previous?.revision ?? null, create: !previous, dimensions, videoDimensions,
+      id, revision, expectedRevision: previous?.revision ?? null, create: !previous, dimensions, videoDimensions, order,
       title: form.elements.title.value, date: form.elements.date.value,
-      type: form.elements.type.value, format: form.elements.format.value,
+      type: form.elements.type.value, format: previous?.format ?? 'square',
       links: Object.fromEntries(Object.keys(platforms).map(key => [key, form.elements[key].value])),
     }));
     for (const file of files) payload.append('images', file);

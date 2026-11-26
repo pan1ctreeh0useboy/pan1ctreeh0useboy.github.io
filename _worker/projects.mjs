@@ -77,7 +77,10 @@ export async function parseProjectSave(request) {
   check(!input.create || files.length || videos.length, 'New projects require an image or a video.');
   check(files.length === input.dimensions?.length, 'Image dimensions are incomplete.');
   check(covers.length === videos.length, 'The video cover is missing.');
-  check(thumbnails.length <= Math.min(files.length, 1) && animations.length <= videos.length, 'Invalid homepage previews.');
+  const order = input.order;
+  check(order === undefined || Array.isArray(order) && order.every(key => typeof key === 'string'), 'Invalid media order.');
+  const canAddThumbnail = order ? order[0] !== 'video' : files.length > 0;
+  check(thumbnails.length <= Number(canAddThumbnail) && animations.length <= videos.length, 'Invalid homepage previews.');
   const originals = [...files, ...videos];
   for (const file of originals) checkFile(file, maxFileSize, 'Each original must be 24 MB or smaller.');
   check(originals.reduce((size, file) => size + file.size, 0) <= maxUploadSize, 'Originals must total 25 MB or less per save.');
@@ -92,10 +95,12 @@ export async function parseProjectSave(request) {
     check(dimensions && ['width', 'height'].every(key => Number.isInteger(dimensions[key]) && dimensions[key] > 0 && dimensions[key] <= 30000), 'Invalid image dimensions.');
     uploads.push({path, bytes, image: {src: `/${path}`, width: dimensions.width, height: dimensions.height}});
   }
+  let thumbnailSrc;
   if (thumbnails.length) {
     const bytes = new Uint8Array(await thumbnails[0].arrayBuffer());
     const path = `${prefix}-thumb.${fileExtension(bytes)}`;
-    uploads[0].image.thumbnailSrc = `/${path}`;
+    thumbnailSrc = `/${path}`;
+    if (!order) uploads[0].image.thumbnailSrc = thumbnailSrc;
     uploads.push({path, bytes});
   }
   let video;
@@ -128,7 +133,7 @@ export async function parseProjectSave(request) {
     }
   }
   return {
-    create: input.create, expectedRevision: input.expectedRevision, uploads, video,
+    create: input.create, expectedRevision: input.expectedRevision, uploads, video, order, thumbnailSrc,
     project: {id: input.id, revision: input.revision, title, date, type, format: input.format, links},
   };
 }
@@ -180,9 +185,24 @@ export class GitHubProjects extends GitHubGallery {
       check(edit.create ? !previous : previous && (previous.revision ?? null) === edit.expectedRevision,
         'This project has changed. Refresh the editor and try again.', 409);
       const newImages = edit.uploads.flatMap(upload => upload.image ? [upload.image] : []);
-      const images = newImages.length ? newImages : previous?.images ?? [];
       const video = edit.video ?? previous?.video;
-      const project = {...edit.project, images, ...(video && {video})};
+      const project = {...edit.project, images: newImages.length ? newImages : previous?.images ?? [], ...(video && {video})};
+      if (edit.order) {
+        const media = new Map((previous?.images ?? []).map((image, i) => [`image:${i}`, image]));
+        newImages.forEach((image, i) => media.set(`new:${i}`, image));
+        if (video) media.set('video', video);
+        check(edit.order.length === media.size && new Set(edit.order).size === media.size &&
+          edit.order.every(key => media.has(key)), 'The order must include each image and video exactly once.');
+        const first = media.get(edit.order[0]);
+        check(first, 'Add at least one image or video.');
+        project.images = edit.order.filter(key => key !== 'video').map(key => media.get(key));
+        if (video) project.videoIndex = edit.order.indexOf('video');
+        if (edit.thumbnailSrc) project.images[0] = {...project.images[0], thumbnailSrc: edit.thumbnailSrc};
+        project.coverRatio = Math.max(1 / 3, Math.min(3, first.width / first.height));
+      } else if (!newImages.length && !edit.video && previous?.coverRatio) {
+        project.coverRatio = previous.coverRatio;
+        if (video) project.videoIndex = previous.videoIndex;
+      }
       if (edit.create) catalog.projects.unshift(project);
       else catalog.projects[index] = project;
       return {message: `${edit.create ? 'Add' : 'Update'} project: ${project.title}`};
