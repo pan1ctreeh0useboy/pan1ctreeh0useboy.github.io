@@ -1,5 +1,6 @@
 import { uploadService, setProjectImage } from './catalog.js';
 import { formats, platforms } from './formats.js';
+import { imageThumbnail, videoPreviews } from './media-previews.js';
 
 const login = document.querySelector('#login-form');
 const editor = document.querySelector('#editor');
@@ -7,6 +8,7 @@ const form = document.querySelector('#project-form');
 const status = document.querySelector('#admin-status');
 const currentImages = document.querySelector('#current-images');
 const selected = form.elements.project;
+const deleteButton = document.querySelector('#delete-project');
 const maxFileSize = 24 * 1024 * 1024;
 const maxUploadSize = 25 * 1024 * 1024;
 let token = '';
@@ -34,6 +36,7 @@ async function api(path, options = {}) {
 
 function showProject() {
   const project = projects.find(item => item.id === selected.value);
+  deleteButton.hidden = !project;
   for (const key of ['title', 'type', 'date']) form.elements[key].value = project?.[key] ?? '';
   form.elements.format.value = project?.format ?? 'a3';
   form.elements.images.value = '';
@@ -55,7 +58,7 @@ function showProject() {
     const fallbackSrc = image.src.startsWith('/projects/uploads/')
       ? `https://raw.githubusercontent.com/pan1ctreeh0useboy/pan1ctreeh0useboy.github.io/main${image.src}`
       : undefined;
-    setProjectImage(img, {...image, fallbackSrc});
+    setProjectImage(img, {...image, src: image.thumbnailSrc ?? image.src, fallbackSrc: fallbackSrc ?? image.src});
     const caption = document.createElement('span');
     caption.textContent = label;
     item.append(img, caption);
@@ -113,40 +116,28 @@ login.addEventListener('submit', async event => {
   }
 });
 
-async function captureVideoCover(file) {
-  if (!/\.mp4$/i.test(file.name)) throw new Error('Choose an MP4 video.');
-  const url = URL.createObjectURL(file);
-  const video = document.createElement('video');
-  video.preload = 'auto';
-  video.muted = true;
-  video.playsInline = true;
-  let timeout;
+deleteButton.addEventListener('click', async () => {
+  const project = projects.find(item => item.id === selected.value);
+  if (busy || !project || !window.confirm(`Delete “${project.title}” from Projects?`)) return;
+  busy = true;
+  editor.inert = true;
+  status.textContent = 'Deleting…';
   try {
-    await new Promise((resolve, reject) => {
-      const fail = () => reject(new Error('This video could not be opened. Export it as H.264 MP4 and try again.'));
-      video.addEventListener('loadeddata', resolve, {once: true});
-      video.addEventListener('error', fail, {once: true});
-      timeout = setTimeout(fail, 15000);
-      video.src = url;
+    const result = await api('/projects/delete', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({id: project.id, expectedRevision: project.revision ?? null}),
     });
-    const width = video.videoWidth;
-    const height = video.videoHeight;
-    if (!width || !height) throw new Error('The MP4 file needs a video track.');
-    const scale = Math.min(1, 1080 / Math.max(width, height));
-    const canvas = document.createElement('canvas');
-    canvas.width = Math.max(1, Math.round(width * scale));
-    canvas.height = Math.max(1, Math.round(height * scale));
-    canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
-    const cover = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.85));
-    if (!cover) throw new Error('The video cover could not be created.');
-    return {cover, dimensions: {width, height, coverWidth: canvas.width, coverHeight: canvas.height}};
+    projects = result.catalog.projects;
+    showProjects();
+    status.textContent = result.message;
+  } catch (error) {
+    status.textContent = error.message;
   } finally {
-    clearTimeout(timeout);
-    video.removeAttribute('src');
-    video.load();
-    URL.revokeObjectURL(url);
+    editor.inert = false;
+    busy = false;
   }
-}
+});
 
 form.addEventListener('submit', async event => {
   event.preventDefault();
@@ -163,23 +154,29 @@ form.addEventListener('submit', async event => {
 
   busy = true;
   editor.inert = true;
-  status.textContent = 'Publishing…';
+  status.textContent = files.length || video ? 'Preparing homepage previews…' : 'Publishing…';
   const id = previous?.id ?? newId;
   try {
-    const dimensions = [];
-    for (const file of files) {
-      const bitmap = await createImageBitmap(file);
-      dimensions.push({width: bitmap.width, height: bitmap.height});
-      bitmap.close();
-    }
     const payload = new FormData();
+    const dimensions = [];
+    for (const [index, file] of files.entries()) {
+      const bitmap = await createImageBitmap(file);
+      try {
+        dimensions.push({width: bitmap.width, height: bitmap.height});
+        if (index === 0) payload.append('thumbnail', await imageThumbnail(bitmap), 'thumbnail');
+      } finally {
+        bitmap.close();
+      }
+    }
     let videoDimensions;
+    let missingAnimation = false;
     if (video) {
-      const {cover, dimensions} = await captureVideoCover(video);
-      if (size + cover.size > maxUploadSize) throw new Error('The files and video cover exceed the 25 MB total.');
+      const {cover, animation, dimensions} = await videoPreviews(video);
       videoDimensions = dimensions;
       payload.append('video', video);
       payload.append('videoCover', cover, 'cover.jpg');
+      if (animation) payload.append('videoAnimation', animation, 'preview.webp');
+      else missingAnimation = true;
     }
     payload.set('metadata', JSON.stringify({
       id, revision, expectedRevision: previous?.revision ?? null, create: !previous, dimensions, videoDimensions,
@@ -188,10 +185,11 @@ form.addEventListener('submit', async event => {
       links: Object.fromEntries(Object.keys(platforms).map(key => [key, form.elements[key].value])),
     }));
     for (const file of files) payload.append('images', file);
+    status.textContent = 'Publishing…';
     const result = await api('/projects/save', {method: 'POST', body: payload});
     projects = result.catalog.projects;
     showProjects(id);
-    status.textContent = result.message;
+    status.textContent = missingAnimation ? result.message + ' A static video cover was generated.' : result.message;
   } catch (error) {
     status.textContent = error.message;
   } finally {

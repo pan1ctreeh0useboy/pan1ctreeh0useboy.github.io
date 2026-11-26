@@ -1,13 +1,36 @@
-import { HttpError, base64, check, fileExtension, text } from './core.mjs';
+import { HttpError, base64, boundedBody, check, fileExtension, text } from './core.mjs';
 import { GitHubGallery } from './github.mjs';
 import { formats, platforms, platformUrl } from '../projects/formats.js';
 
 const catalogPath = 'projects/catalog.json';
 const maxFileSize = 24 * 1024 * 1024;
 const maxUploadSize = 25 * 1024 * 1024;
-const maxBodySize = 26 * 1024 * 1024;
+const maxThumbnailSize = 1024 * 1024;
+const maxAnimationSize = 2 * 1024 * 1024;
+const maxBodySize = 30 * 1024 * 1024;
 const projectId = /^[a-z0-9][a-z0-9-]{0,79}$/;
 const revisionId = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+
+function checkProjectId(input) {
+  check(typeof input?.id === 'string' && projectId.test(input.id), 'Invalid project identifier.');
+  check(input.expectedRevision === null || typeof input.expectedRevision === 'string' && revisionId.test(input.expectedRevision), 'Invalid previous version.');
+}
+
+export async function parseProjectDelete(request) {
+  const bytes = await boundedBody(request, 2048);
+  let input;
+  try {
+    input = JSON.parse(new TextDecoder().decode(bytes));
+  } catch {
+    throw new HttpError(400, 'The project to delete could not be read.');
+  }
+  checkProjectId(input);
+  return {id: input.id, expectedRevision: input.expectedRevision};
+}
+
+function checkFile(file, limit, message) {
+  check(file && typeof file.arrayBuffer === 'function' && file.size > 0 && file.size <= limit, message);
+}
 
 export async function parseProjectSave(request) {
   check(request.body, 'Missing request body.');
@@ -28,9 +51,8 @@ export async function parseProjectSave(request) {
     if (error instanceof HttpError) throw error;
     throw new HttpError(400, 'The project upload could not be read.');
   }
-  check(input && projectId.test(input.id) && typeof input.id === 'string', 'Invalid project identifier.');
+  checkProjectId(input);
   check(typeof input.revision === 'string' && revisionId.test(input.revision), 'Invalid save identifier.');
-  check(input.expectedRevision === null || typeof input.expectedRevision === 'string' && revisionId.test(input.expectedRevision), 'Invalid previous version.');
   check(typeof input.create === 'boolean', 'Choose a project.');
   check(typeof input.format === 'string' && Object.hasOwn(formats, input.format), 'Choose a display format.');
   const title = text(input.title, 'a project title', 160);
@@ -49,20 +71,32 @@ export async function parseProjectSave(request) {
   const files = form.getAll('images');
   const videos = form.getAll('video');
   const covers = form.getAll('videoCover');
+  const thumbnails = form.getAll('thumbnail');
+  const animations = form.getAll('videoAnimation');
   check(files.length <= 10 && videos.length <= 1, 'Choose up to 10 images and one MP4 video.');
   check(!input.create || files.length || videos.length, 'New projects require an image or a video.');
   check(files.length === input.dimensions?.length, 'Image dimensions are incomplete.');
   check(covers.length === videos.length, 'The video cover is missing.');
-  const media = [...files, ...videos, ...covers];
-  check(media.every(file => typeof file.arrayBuffer === 'function' && file.size > 0 && file.size <= maxFileSize), 'Each file must be 24 MB or smaller.');
-  check(media.reduce((size, file) => size + file.size, 0) <= maxUploadSize, 'Media must total 25 MB or less per save.');
+  check(thumbnails.length <= Math.min(files.length, 1) && animations.length <= videos.length, 'Invalid homepage previews.');
+  const originals = [...files, ...videos];
+  for (const file of originals) checkFile(file, maxFileSize, 'Each original must be 24 MB or smaller.');
+  check(originals.reduce((size, file) => size + file.size, 0) <= maxUploadSize, 'Originals must total 25 MB or less per save.');
+  for (const file of [...thumbnails, ...covers]) checkFile(file, maxThumbnailSize, 'Each cover must be 1 MB or smaller.');
+  for (const file of animations) checkFile(file, maxAnimationSize, 'The animated preview must be 2 MB or smaller.');
+  const prefix = `projects/uploads/${input.revision}`;
   const uploads = [];
   for (const [index, file] of files.entries()) {
     const bytes = new Uint8Array(await file.arrayBuffer());
-    const path = `projects/uploads/${input.revision}-${index}.${fileExtension(bytes)}`;
+    const path = `${prefix}-${index}.${fileExtension(bytes)}`;
     const dimensions = input.dimensions[index];
     check(dimensions && ['width', 'height'].every(key => Number.isInteger(dimensions[key]) && dimensions[key] > 0 && dimensions[key] <= 30000), 'Invalid image dimensions.');
     uploads.push({path, bytes, image: {src: `/${path}`, width: dimensions.width, height: dimensions.height}});
+  }
+  if (thumbnails.length) {
+    const bytes = new Uint8Array(await thumbnails[0].arrayBuffer());
+    const path = `${prefix}-thumb.${fileExtension(bytes)}`;
+    uploads[0].image.thumbnailSrc = `/${path}`;
+    uploads.push({path, bytes});
   }
   let video;
   if (videos.length) {
@@ -76,18 +110,34 @@ export async function parseProjectSave(request) {
       Number.isInteger(dimensions[key]) && dimensions[key] > 0 && dimensions[key] <= 30000), 'Invalid video dimensions.');
     const coverBytes = new Uint8Array(await covers[0].arrayBuffer());
     check(fileExtension(coverBytes) === 'jpg', 'The video cover must be JPEG.');
-    const path = `projects/uploads/${input.revision}.mp4`;
-    const coverPath = `projects/uploads/${input.revision}-video.jpg`;
+    const path = `${prefix}.mp4`;
+    const coverPath = `${prefix}-video.jpg`;
     uploads.push({path, bytes}, {path: coverPath, bytes: coverBytes});
     video = {
       src: `/${path}`, width: dimensions.width, height: dimensions.height,
       cover: {src: `/${coverPath}`, width: dimensions.coverWidth, height: dimensions.coverHeight},
     };
+    if (animations.length) {
+      const bytes = new Uint8Array(await animations[0].arrayBuffer());
+      const tag = (from, to) => decoder.decode(bytes.subarray(from, to));
+      check(fileExtension(bytes) === 'webp' && tag(12, 16) === 'VP8X' &&
+        (bytes[20] & 2) && tag(30, 34) === 'ANIM', 'The animated preview must be animated WebP.');
+      const animationPath = `${prefix}-loop.webp`;
+      video.animatedPreviewSrc = `/${animationPath}`;
+      uploads.push({path: animationPath, bytes});
+    }
   }
   return {
     create: input.create, expectedRevision: input.expectedRevision, uploads, video,
     project: {id: input.id, revision: input.revision, title, date, type, format: input.format, links},
   };
+}
+
+function mediaPaths(project) {
+  const images = [...project.images, project.video?.cover].filter(Boolean);
+  return [...images.flatMap(image => [image.src, image.thumbnailSrc]), project.video?.src, project.video?.animatedPreviewSrc]
+    .filter(src => typeof src === 'string' && /^\/projects\/(?:uploads|covers)\/[a-zA-Z0-9-]+\.(?:jpg|png|webp|mp4)$/.test(src))
+    .map(src => src.slice(1));
 }
 
 export class GitHubProjects extends GitHubGallery {
@@ -123,37 +173,61 @@ export class GitHubProjects extends GitHubGallery {
   }
 
   async save(edit) {
-    let blobs;
-    const branch = encodeURIComponent(this.env.GITHUB_BRANCH);
-    for (let attempt = 0; attempt < 3; attempt++) {
-      const ref = await this.api(`/git/ref/heads/${branch}`);
-      const head = ref.object.sha;
-      const catalog = await this.projectFile(head);
+    return this.changeCatalog(catalog => {
       const index = catalog.projects.findIndex(project => project.id === edit.project.id);
       const previous = catalog.projects[index];
-      if (previous?.revision === edit.project.revision) return catalog;
-      check(edit.create ? !previous : previous && previous.revision === edit.expectedRevision, 'This project has changed. Refresh the editor and try again.', 409);
+      if (previous?.revision === edit.project.revision) return null;
+      check(edit.create ? !previous : previous && (previous.revision ?? null) === edit.expectedRevision,
+        'This project has changed. Refresh the editor and try again.', 409);
       const newImages = edit.uploads.flatMap(upload => upload.image ? [upload.image] : []);
       const images = newImages.length ? newImages : previous?.images ?? [];
       const video = edit.video ?? previous?.video;
       const project = {...edit.project, images, ...(video && {video})};
       if (edit.create) catalog.projects.unshift(project);
       else catalog.projects[index] = project;
+      return {message: `${edit.create ? 'Add' : 'Update'} project: ${project.title}`};
+    }, edit.uploads);
+  }
+
+  async deleteProject(edit) {
+    return this.changeCatalog(catalog => {
+      const index = catalog.projects.findIndex(project => project.id === edit.id);
+      if (index < 0) return null;
+      const project = catalog.projects[index];
+      check((project.revision ?? null) === edit.expectedRevision,
+        'This project has changed. Refresh the editor and try again.', 409);
+      catalog.projects.splice(index, 1);
+      const retained = new Set(catalog.projects.flatMap(mediaPaths));
+      const files = [...new Set(mediaPaths(project))].filter(path => !retained.has(path));
+      return {message: `Delete project: ${project.title}`, files};
+    });
+  }
+
+  async changeCatalog(update, uploads = []) {
+    let blobs;
+    const branch = encodeURIComponent(this.env.GITHUB_BRANCH);
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const ref = await this.api(`/git/ref/heads/${branch}`);
+      const head = ref.object.sha;
+      const catalog = await this.projectFile(head);
+      const change = update(catalog);
+      if (!change) return catalog;
 
       if (!blobs) {
         blobs = [];
-        for (const upload of edit.uploads) {
+        for (const upload of uploads) {
           const blob = await this.api('/git/blobs', 'POST', {content: upload.bytes.toBase64?.() ?? base64(upload.bytes), encoding: 'base64'});
           blobs.push({path: upload.path, mode: '100644', type: 'blob', sha: blob.sha});
         }
       }
       const commit = await this.api(`/git/commits/${head}`);
+      const removals = (change.files ?? []).map(path => ({path, mode: '100644', type: 'blob', sha: null}));
       const tree = await this.api('/git/trees', 'POST', {
         base_tree: commit.tree.sha,
-        tree: [...blobs, {path: catalogPath, mode: '100644', type: 'blob', content: JSON.stringify(catalog, null, 2) + '\n'}],
+        tree: [...blobs, ...removals, {path: catalogPath, mode: '100644', type: 'blob', content: JSON.stringify(catalog, null, 2) + '\n'}],
       });
       const next = await this.api('/git/commits', 'POST', {
-        message: `${edit.create ? 'Add' : 'Update'} project: ${project.title}`, tree: tree.sha, parents: [head],
+        message: change.message, tree: tree.sha, parents: [head],
       });
       try {
         await this.api(`/git/refs/heads/${branch}`, 'PATCH', {sha: next.sha, force: false});

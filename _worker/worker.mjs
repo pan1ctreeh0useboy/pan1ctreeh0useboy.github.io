@@ -1,6 +1,6 @@
 import { HttpError, boundedBody, check, passwordMatches, createSession, validSession, parseUpload, parsePhotoEdit } from './core.mjs';
 import { GitHubGallery } from './github.mjs';
-import { GitHubProjects, parseProjectSave } from './projects.mjs';
+import { GitHubProjects, parseProjectDelete, parseProjectSave } from './projects.mjs';
 
 export function createHandler(makeRepository = env => new GitHubGallery(env), makeProjects = env => new GitHubProjects(env)) {
   return async function handle(request, env) {
@@ -33,10 +33,14 @@ export function createHandler(makeRepository = env => new GitHubGallery(env), ma
       }
       check(await validSession(request.headers.get('Authorization')?.replace(/^Bearer /, ''), env.SESSION_SECRET), 'Please sign in again.', 401);
       if (request.method === 'GET' && path === '/projects/editor') return reply(await makeProjects(env).projectFile());
-      if (request.method === 'POST' && path === '/projects/save') {
+      if (request.method === 'POST' && ['/projects/save', '/projects/delete'].includes(path)) {
         check(env.UPLOAD_LIMITER, 'Uploads are not connected yet.', 503);
         check((await env.UPLOAD_LIMITER.limit({key: ip})).success, 'Please wait one minute before saving again.', 429);
-        return reply({catalog: await makeProjects(env).save(await parseProjectSave(request)), message: 'Project published.'});
+        const projects = makeProjects(env);
+        if (path === '/projects/delete') {
+          return reply({catalog: await projects.deleteProject(await parseProjectDelete(request)), message: 'Project deleted. GitHub Pages may take a moment to update.'});
+        }
+        return reply({catalog: await projects.save(await parseProjectSave(request)), message: 'Project published.'});
       }
       const repository = makeRepository(env);
       if (request.method === 'GET' && path === '/gallery') return reply(await repository.read());

@@ -12,7 +12,7 @@ function showProject(project) {
   if (project.video) {
     const media = project.video;
     const slide = slideTemplate.content.cloneNode(true);
-    slide.querySelector('.vertical-text').textContent = 'Video';
+    slide.querySelector('.vertical-text').textContent = 'fig.1';
     const video = document.createElement('video');
     video.controls = true;
     video.playsInline = true;
@@ -33,7 +33,7 @@ function showProject(project) {
   }
   project.images.forEach((image, index) => {
     const slide = slideTemplate.content.cloneNode(true);
-    slide.querySelector('.vertical-text').textContent = image.caption || `fig.${index + 1} ${project.type}`;
+    slide.querySelector('.vertical-text').textContent = `fig.${index + (project.video ? 2 : 1)}`;
     const img = slide.querySelector('img');
     setProjectImage(img, image);
     // Match the original template, where the source image controls its natural size.
