@@ -6,22 +6,91 @@ const feed = document.querySelector('#projects-feed');
 const projectsPerBand = 6;
 // The separate desktop layout can use the same dataset and layout engine later.
 const compact = matchMedia('(max-width: 680px)');
-let previewObserver;
+const setPreviewVisibility = new WeakMap();
+const previewObserver = new IntersectionObserver(entries => {
+  for (const {target, intersectionRatio} of entries) {
+    setPreviewVisibility.get(target)(intersectionRatio >= 0.2);
+  }
+}, {threshold: 0.2});
+
+function addPreview(card, media) {
+  const video = document.createElement('video');
+  video.defaultMuted = true;
+  video.muted = true;
+  video.loop = true;
+  video.playsInline = true;
+  video.preload = 'none';
+  video.setAttribute('aria-hidden', 'true');
+  card.prepend(video);
+
+  const animation = media.animatedPreviewSrc ? document.createElement('img') : null;
+  let visible = false;
+  let autoplayBlocked = false;
+  let startTimeout;
+
+  function hideAnimation() {
+    if (!animation) return;
+    animation.hidden = true;
+    animation.removeAttribute('src');
+  }
+
+  function showAnimation() {
+    if (!animation || !visible || !card.isConnected || card.classList.contains('preview-playing')) return;
+    if (!animation.hasAttribute('src')) animation.src = media.animatedPreviewSrc;
+    if (animation.naturalWidth > 0) animation.hidden = false;
+  }
+
+  if (animation) {
+    animation.className = 'preview-animation';
+    animation.alt = '';
+    animation.hidden = true;
+    animation.addEventListener('load', showAnimation);
+    card.append(animation);
+  }
+
+  video.addEventListener('playing', () => {
+    clearTimeout(startTimeout);
+    card.classList.add('preview-playing');
+    hideAnimation();
+  });
+  video.addEventListener('error', () => {
+    card.classList.remove('preview-playing');
+    showAnimation();
+    if (media.fallbackSrc && video.src !== media.fallbackSrc) video.src = media.fallbackSrc;
+  });
+
+  setPreviewVisibility.set(card, inView => {
+    visible = inView;
+    clearTimeout(startTimeout);
+    video.autoplay = inView && !autoplayBlocked;
+    if (!inView) {
+      video.pause();
+      hideAnimation();
+      return;
+    }
+    if (autoplayBlocked) {
+      showAnimation();
+      return;
+    }
+
+    if (!video.hasAttribute('src')) video.src = media.src;
+    if (animation) startTimeout = setTimeout(showAnimation, 1500);
+    video.play().catch(error => {
+      if (!visible || error.name === 'AbortError') return;
+      if (error.name === 'NotAllowedError') {
+        autoplayBlocked = true;
+        video.autoplay = false;
+      }
+      clearTimeout(startTimeout);
+      showAnimation();
+    });
+  });
+  previewObserver.observe(card);
+}
 
 function draw(projects) {
-  previewObserver?.disconnect();
-  feed.querySelectorAll('video').forEach(video => video.pause());
-  previewObserver = new IntersectionObserver(entries => {
-    for (const {target: video, intersectionRatio} of entries) {
-      video.autoplay = intersectionRatio >= 0.2;
-      if (video.autoplay) {
-        if (!video.hasAttribute('src')) video.src = video.dataset.src;
-        video.play().catch(() => { /* The cover stays visible if playback is blocked. */ });
-      } else {
-        video.pause();
-      }
-    }
-  }, {threshold: 0.2});
+  previewObserver.disconnect();
+  feed.querySelectorAll('.project-cover').forEach(card => setPreviewVisibility.get(card)?.(false));
   const fragment = document.createDocumentFragment();
   let exitGuides = [];
   for (let start = 0; start < projects.length; start += projectsPerBand) {
@@ -48,25 +117,8 @@ function draw(projects) {
       else if (index === 0) img.fetchPriority = 'high';
       const cover = project.images?.[0] ?? project.video.cover;
       setProjectImage(img, cover.thumbnailSrc ? {...cover, src: cover.thumbnailSrc, fallbackSrc: cover.src} : cover);
-      if (project.video) {
-        const media = project.video;
-        const video = document.createElement('video');
-        video.muted = true;
-        video.defaultMuted = true;
-        video.loop = true;
-        video.playsInline = true;
-        video.preload = 'none';
-        video.dataset.src = media.src;
-        video.setAttribute('aria-hidden', 'true');
-        video.addEventListener('playing', () => detail.classList.add('preview-playing'));
-        video.addEventListener('error', () => {
-          detail.classList.remove('preview-playing');
-          if (media.fallbackSrc && video.src !== media.fallbackSrc) video.src = media.fallbackSrc;
-        });
-        detail.append(video);
-        previewObserver.observe(video);
-      }
       detail.append(img);
+      if (project.video) addPreview(detail, project.video);
       band.append(detail);
     });
     fragment.append(band);

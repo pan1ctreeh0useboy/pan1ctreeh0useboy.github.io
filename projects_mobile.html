@@ -22,10 +22,12 @@
       object-fit: contain;
       display: block;
     }
-    .project-cover video { pointer-events: none; }
+    .project-cover video, .project-cover .preview-animation { pointer-events: none; }
+    .project-cover .preview-animation { z-index: 1; }
+    .project-cover .preview-animation[hidden] { display: none; }
     .project-cover.preview-playing video { z-index: 1; }
   </style>
-  <script type="module" src="/projects/mobile.js?v=fast-feed"></script>
+  <script type="module" src="/projects/mobile.js?v=animated-fallback"></script>
 </head>
 <body>
   <div class="wrap">
