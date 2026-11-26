@@ -24,7 +24,9 @@
         <label>Work type<input name="type" required maxlength="100" /></label>
         <label>Display format<select name="format" required></select></label>
         <label>Source images<input name="images" type="file" accept="image/jpeg,image/png,image/webp" multiple /></label>
-        <p class="admin-note">JPEG, PNG or WebP. The first image is the cover. Choosing files replaces the current images.</p>
+        <p class="admin-note">JPEG, PNG or WebP. The first image is the cover when provided. Choosing files replaces the current images.</p>
+        <label>Source video<input name="video" type="file" accept=".mp4,video/mp4" /></label>
+        <p class="admin-note">One MP4 per project. Select a file to replace the existing video. Video-only projects use a frame as the cover. Each file can be up to 24 MB, with 25 MB total per save.</p>
         <ul id="current-images" class="published-files"></ul>
         <label>Behance<input name="behance" type="url" maxlength="2048" /></label>
         <label>Vimeo<input name="vimeo" type="url" maxlength="2048" /></label>

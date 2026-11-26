@@ -47,22 +47,45 @@ export async function parseProjectSave(request) {
   }
 
   const files = form.getAll('images');
-  check(files.length <= 10 && (!input.create || files.length > 0), 'Choose up to 10 images. New projects require an image.');
+  const videos = form.getAll('video');
+  const covers = form.getAll('videoCover');
+  check(files.length <= 10 && videos.length <= 1, 'Choose up to 10 images and one MP4 video.');
+  check(!input.create || files.length || videos.length, 'New projects require an image or a video.');
   check(files.length === input.dimensions?.length, 'Image dimensions are incomplete.');
-  let total = 0;
+  check(covers.length === videos.length, 'The video cover is missing.');
+  const media = [...files, ...videos, ...covers];
+  check(media.every(file => typeof file.arrayBuffer === 'function' && file.size > 0 && file.size <= maxFileSize), 'Each file must be 24 MB or smaller.');
+  check(media.reduce((size, file) => size + file.size, 0) <= maxUploadSize, 'Media must total 25 MB or less per save.');
   const uploads = [];
   for (const [index, file] of files.entries()) {
-    check(typeof file.arrayBuffer === 'function' && file.size > 0 && file.size <= maxFileSize, 'Each image must be 24 MB or smaller.');
-    total += file.size;
-    check(total <= maxUploadSize, 'Images must be 25 MB or smaller per save.');
     const bytes = new Uint8Array(await file.arrayBuffer());
     const path = `projects/uploads/${input.revision}-${index}.${fileExtension(bytes)}`;
     const dimensions = input.dimensions[index];
     check(dimensions && ['width', 'height'].every(key => Number.isInteger(dimensions[key]) && dimensions[key] > 0 && dimensions[key] <= 30000), 'Invalid image dimensions.');
     uploads.push({path, bytes, image: {src: `/${path}`, width: dimensions.width, height: dimensions.height}});
   }
+  let video;
+  if (videos.length) {
+    const bytes = new Uint8Array(await videos[0].arrayBuffer());
+    const decoder = new TextDecoder();
+    const boxSize = bytes.length >= 16 ? new DataView(bytes.buffer).getUint32(0) : 0;
+    check(boxSize >= 16 && boxSize <= bytes.length && decoder.decode(bytes.subarray(4, 8)) === 'ftyp' &&
+      /^(?:iso[0-9m]|mp4[12]|avc1|M4V )$/.test(decoder.decode(bytes.subarray(8, 12))), 'Choose an MP4 video.');
+    const dimensions = input.videoDimensions;
+    check(dimensions && ['width', 'height', 'coverWidth', 'coverHeight'].every(key =>
+      Number.isInteger(dimensions[key]) && dimensions[key] > 0 && dimensions[key] <= 30000), 'Invalid video dimensions.');
+    const coverBytes = new Uint8Array(await covers[0].arrayBuffer());
+    check(fileExtension(coverBytes) === 'jpg', 'The video cover must be JPEG.');
+    const path = `projects/uploads/${input.revision}.mp4`;
+    const coverPath = `projects/uploads/${input.revision}-video.jpg`;
+    uploads.push({path, bytes}, {path: coverPath, bytes: coverBytes});
+    video = {
+      src: `/${path}`, width: dimensions.width, height: dimensions.height,
+      cover: {src: `/${coverPath}`, width: dimensions.coverWidth, height: dimensions.coverHeight},
+    };
+  }
   return {
-    create: input.create, expectedRevision: input.expectedRevision, uploads,
+    create: input.create, expectedRevision: input.expectedRevision, uploads, video,
     project: {id: input.id, revision: input.revision, title, date, type, format: input.format, links},
   };
 }
@@ -88,11 +111,13 @@ export class GitHubProjects extends GitHubGallery {
   async readPublic() {
     const catalog = await this.projectFile();
     const base = `https://raw.githubusercontent.com/${this.env.GITHUB_OWNER}/${this.env.GITHUB_REPO}/${encodeURIComponent(this.env.GITHUB_BRANCH)}`;
+    const withFallback = media => media.src.startsWith('/projects/uploads/') ? {...media, fallbackSrc: base + media.src} : media;
     return {
       version: catalog.version,
-      projects: catalog.projects.map(({revision, ...project}) => ({
+      projects: catalog.projects.map(({revision, video, ...project}) => ({
         ...project,
-        images: project.images.map(image => image.src.startsWith('/projects/uploads/') ? {...image, fallbackSrc: base + image.src} : image),
+        images: project.images.map(withFallback),
+        ...(video && {video: {...withFallback(video), cover: withFallback(video.cover)}}),
       })),
     };
   }
@@ -108,8 +133,10 @@ export class GitHubProjects extends GitHubGallery {
       const previous = catalog.projects[index];
       if (previous?.revision === edit.project.revision) return catalog;
       check(edit.create ? !previous : previous && previous.revision === edit.expectedRevision, 'This project has changed. Refresh the editor and try again.', 409);
-      const images = edit.uploads.length ? edit.uploads.map(upload => upload.image) : previous.images;
-      const project = {...edit.project, images};
+      const newImages = edit.uploads.flatMap(upload => upload.image ? [upload.image] : []);
+      const images = newImages.length ? newImages : previous?.images ?? [];
+      const video = edit.video ?? previous?.video;
+      const project = {...edit.project, images, ...(video && {video})};
       if (edit.create) catalog.projects.unshift(project);
       else catalog.projects[index] = project;
 

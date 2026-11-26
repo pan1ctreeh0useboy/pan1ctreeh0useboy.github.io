@@ -9,6 +9,28 @@ function showProject(project) {
   document.querySelector('#project-type').textContent = project.type;
   const slider = document.querySelector('.slider');
   const slideTemplate = document.querySelector('#slide-template');
+  if (project.video) {
+    const media = project.video;
+    const slide = slideTemplate.content.cloneNode(true);
+    slide.querySelector('.vertical-text').textContent = 'Video';
+    const video = document.createElement('video');
+    video.controls = true;
+    video.playsInline = true;
+    video.preload = 'metadata';
+    video.setAttribute('aria-label', project.title);
+    video.width = media.width;
+    video.height = media.height;
+    video.poster = media.cover.src;
+    if (media.fallbackSrc) {
+      video.addEventListener('error', () => {
+        video.poster = media.cover.fallbackSrc ?? media.cover.src;
+        video.src = media.fallbackSrc;
+      }, {once: true});
+    }
+    video.src = media.src;
+    slide.querySelector('img').replaceWith(video);
+    slider.append(slide);
+  }
   project.images.forEach((image, index) => {
     const slide = slideTemplate.content.cloneNode(true);
     slide.querySelector('.vertical-text').textContent = image.caption || `fig.${index + 1} ${project.type}`;

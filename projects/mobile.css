@@ -81,6 +81,12 @@
       display: block;
     }
 
+    .slide video {
+      width: min(100%, calc(80vw - 26pt));
+      height: auto;
+      display: block;
+    }
+
     /* Behance 图标 */
     .behance-icon {
       margin-top: 67pt;

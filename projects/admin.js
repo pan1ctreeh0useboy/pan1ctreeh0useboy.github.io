@@ -37,10 +37,15 @@ function showProject() {
   for (const key of ['title', 'type', 'date']) form.elements[key].value = project?.[key] ?? '';
   form.elements.format.value = project?.format ?? 'a3';
   form.elements.images.value = '';
+  form.elements.video.value = '';
   for (const key of Object.keys(platforms)) form.elements[key].value = project?.links?.[key] ?? '';
 
   currentImages.replaceChildren();
-  for (const [index, image] of (project?.images ?? []).entries()) {
+  const media = (project?.images ?? []).map((image, index) => ({
+    image, label: index === 0 ? 'Cover' : `Image ${index + 1}`,
+  }));
+  if (project?.video) media.push({image: project.video.cover, label: 'Video'});
+  for (const {image, label} of media) {
     const item = document.createElement('li');
     item.className = 'photo-list-item';
     const img = document.createElement('img');
@@ -51,9 +56,9 @@ function showProject() {
       ? `https://raw.githubusercontent.com/pan1ctreeh0useboy/pan1ctreeh0useboy.github.io/main${image.src}`
       : undefined;
     setProjectImage(img, {...image, fallbackSrc});
-    const label = document.createElement('span');
-    label.textContent = index === 0 ? 'Cover' : `Image ${index + 1}`;
-    item.append(img, label);
+    const caption = document.createElement('span');
+    caption.textContent = label;
+    item.append(img, caption);
     currentImages.append(item);
   }
 
@@ -108,13 +113,51 @@ login.addEventListener('submit', async event => {
   }
 });
 
+async function captureVideoCover(file) {
+  if (!/\.mp4$/i.test(file.name)) throw new Error('Choose an MP4 video.');
+  const url = URL.createObjectURL(file);
+  const video = document.createElement('video');
+  video.preload = 'auto';
+  video.muted = true;
+  video.playsInline = true;
+  let timeout;
+  try {
+    await new Promise((resolve, reject) => {
+      const fail = () => reject(new Error('This video could not be opened. Export it as H.264 MP4 and try again.'));
+      video.addEventListener('loadeddata', resolve, {once: true});
+      video.addEventListener('error', fail, {once: true});
+      timeout = setTimeout(fail, 15000);
+      video.src = url;
+    });
+    const width = video.videoWidth;
+    const height = video.videoHeight;
+    if (!width || !height) throw new Error('The MP4 file needs a video track.');
+    const scale = Math.min(1, 1080 / Math.max(width, height));
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.round(width * scale));
+    canvas.height = Math.max(1, Math.round(height * scale));
+    canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+    const cover = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.85));
+    if (!cover) throw new Error('The video cover could not be created.');
+    return {cover, dimensions: {width, height, coverWidth: canvas.width, coverHeight: canvas.height}};
+  } finally {
+    clearTimeout(timeout);
+    video.removeAttribute('src');
+    video.load();
+    URL.revokeObjectURL(url);
+  }
+}
+
 form.addEventListener('submit', async event => {
   event.preventDefault();
   if (busy) return;
   const previous = projects.find(item => item.id === selected.value);
   const files = Array.from(form.elements.images.files);
-  if ((!previous && files.length === 0) || files.length > 10 || files.some(file => file.size > maxFileSize) || files.reduce((total, file) => total + file.size, 0) > maxUploadSize) {
-    status.textContent = 'Choose up to 10 images, 24 MB each and 25 MB total. New projects require an image.';
+  const video = form.elements.video.files[0];
+  const size = files.reduce((total, file) => total + file.size, video?.size ?? 0);
+  if ((!previous && !files.length && !video) || files.length > 10 || video?.size > maxFileSize ||
+      files.some(file => file.size > maxFileSize) || size > maxUploadSize) {
+    status.textContent = 'Choose up to 10 images and one MP4, 24 MB per file and 25 MB total. New projects require media.';
     return;
   }
 
@@ -130,8 +173,16 @@ form.addEventListener('submit', async event => {
       bitmap.close();
     }
     const payload = new FormData();
+    let videoDimensions;
+    if (video) {
+      const {cover, dimensions} = await captureVideoCover(video);
+      if (size + cover.size > maxUploadSize) throw new Error('The files and video cover exceed the 25 MB total.');
+      videoDimensions = dimensions;
+      payload.append('video', video);
+      payload.append('videoCover', cover, 'cover.jpg');
+    }
     payload.set('metadata', JSON.stringify({
-      id, revision, expectedRevision: previous?.revision ?? null, create: !previous, dimensions,
+      id, revision, expectedRevision: previous?.revision ?? null, create: !previous, dimensions, videoDimensions,
       title: form.elements.title.value, date: form.elements.date.value,
       type: form.elements.type.value, format: form.elements.format.value,
       links: Object.fromEntries(Object.keys(platforms).map(key => [key, form.elements[key].value])),

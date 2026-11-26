@@ -30,7 +30,7 @@ function draw(projects) {
       const img = document.createElement('img');
       img.alt = project.title;
       if (start) img.loading = 'lazy';
-      setProjectImage(img, project.images[0]);
+      setProjectImage(img, project.images?.[0] ?? project.video.cover);
       detail.append(img);
       band.append(detail);
     });
@@ -41,7 +41,7 @@ function draw(projects) {
 
 try {
   const projects = (await readProjects())
-    .filter(project => Object.hasOwn(formats, project.format) && project.images?.length)
+    .filter(project => Object.hasOwn(formats, project.format) && (project.images?.length || project.video?.cover))
     .map(project => ({project, format: formats[project.format]}));
   draw(projects);
   compact.addEventListener('change', () => draw(projects));
