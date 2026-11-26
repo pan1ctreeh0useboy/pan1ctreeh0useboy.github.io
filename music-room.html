@@ -103,22 +103,6 @@
       height: auto;
       aspect-ratio: 1;
     }
-    .replay {
-      position: fixed;
-      right: max(1rem, env(safe-area-inset-right));
-      bottom: max(1rem, env(safe-area-inset-bottom));
-      display: grid;
-      place-items: center;
-      width: 44px;
-      height: 44px;
-      border: 1px solid #404040;
-      border-radius: 50%;
-      background: #000;
-      color: #aaa;
-      cursor: pointer;
-    }
-    .replay[hidden] { display: none; }
-    .replay:hover, .replay:focus-visible { border-color: #fff; color: #fff; }
     .status {
       position: fixed;
       inset: auto 4rem 1.5rem 4rem;
@@ -142,11 +126,6 @@
     <p></p>
   </div>
   <main class="stage" aria-label="Falling album covers"></main>
-  <button class="replay" type="button" aria-label="Replay drop" title="Replay drop" hidden>
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
-      <path d="M4 10a8 8 0 1 1 1.5 7M4 4v6h6" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
-  </button>
   <p class="status" role="status"></p>
   <script type="text/plain" id="planck-engine">
 (function(global,factory){typeof exports==="object"&&typeof module!=="undefined"?factory(exports):typeof define==="function"&&define.amd?define(["exports"],factory):(global=typeof globalThis!=="undefined"?globalThis:global||self,factory(global.planck={}))})(this,(function(exports2){"use strict";
@@ -204,7 +183,6 @@
       ["Dunya", "Mustafa", "2024", "Alternative", "Music211/v4/41/56/62/415662de-a27c-5a22-7a94-3e047320f5a4/46265.jpg"]
     ];
     const stage = document.querySelector('.stage');
-    const replay = document.querySelector('.replay');
     const status = document.querySelector('.status');
     const infoLines = document.querySelectorAll('.album-info p');
     const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
@@ -288,7 +266,7 @@
       if (event.key === 'Escape') clearAlbumInfo();
     });
 
-    const drops = [
+    const dropPattern = [
       { time: 0, x: -0.17, angle: -0.10, spin: 0.10 },
       { time: 0.20, x: 0.15, angle: 0.16, spin: -0.18 },
       { time: 0.43, x: -0.43, angle: -0.23, spin: 0.17 },
@@ -301,6 +279,27 @@
       { time: 2.04, x: 0.41, angle: -0.19, spin: 0.17 },
       { time: 2.27, x: -0.06, angle: 0.11, spin: -0.18 }
     ];
+
+    function randomizeDrops(seed) {
+      let state = seed;
+      function offset(range) {
+        state = (Math.imul(state, 1664525) + 1013904223) >>> 0;
+        return (state / 2 ** 32 * 2 - 1) * range;
+      }
+
+      return dropPattern.map(({ time, x, angle, spin }) => ({
+        time,
+        x: x + offset(0.10),
+        angle: angle + offset(0.18),
+        spin: spin + offset(0.30)
+      }));
+    }
+
+    function newSeed() {
+      return crypto.getRandomValues(new Uint32Array(1))[0];
+    }
+
+    let seed = newSeed();
 
     function buildTracks(width, height, size, drops) {
       const { World, Box, Settings } = planck;
@@ -324,6 +323,7 @@
       const lastTick = ticksPerSecond * 16;
       const releaseTicks = drops.map(({ time }) => Math.round(time * ticksPerSecond));
       let tick = 0;
+      let steadyTicks = 0;
 
       function sample({ rigidBody, frames }, time) {
         const {x, y} = rigidBody.getPosition();
@@ -352,7 +352,15 @@
         }
 
         world.step(1 / ticksPerSecond, 10, 8);
-        if (bodies.length === drops.length && bodies.every(({ rigidBody }) => !rigidBody.isAwake())) break;
+        if (bodies.length === drops.length) {
+          if (bodies.every(({ rigidBody }) => !rigidBody.isAwake())) break;
+          const steady = bodies.every(({ rigidBody }) => {
+            const { x, y } = rigidBody.getLinearVelocity();
+            return Math.hypot(x, y) + Math.abs(rigidBody.getAngularVelocity()) / 2 < 0.004;
+          });
+          steadyTicks = steady ? steadyTicks + 1 : 0;
+          if (steadyTicks >= ticksPerSecond * 0.4) break;
+        }
         if (tick % 2 === 1) {
           for (const body of bodies) sample(body, tick + 1);
         }
@@ -376,7 +384,7 @@
 
     async function calculateTracks(width, height, size) {
       const engine = document.getElementById('planck-engine').textContent;
-      const args = [width, height, size, drops];
+      const args = [width, height, size, randomizeDrops(seed)];
       const source = engine + '\nself.onmessage = ({ data }) => self.postMessage((' +
         buildTracks.toString() + ')(...data));';
       const url = URL.createObjectURL(new Blob([source], { type: 'text/javascript' }));
@@ -409,7 +417,6 @@
 
       const canAnimate = !reducedMotion.matches;
       stage.dataset.mode = canAnimate ? 'drop' : 'static';
-      replay.hidden = !canAnimate;
       for (const cover of covers) cover.removeAttribute('style');
       if (!canAnimate) return;
 
@@ -449,7 +456,14 @@
       initialized = true;
       start();
     });
-    replay.addEventListener('click', start);
+    window.addEventListener('pageshow', event => {
+      if (!event.persisted) return;
+      const nextSeed = newSeed();
+      seed = nextSeed === seed ? (seed + 1) >>> 0 : nextSeed;
+      lastScene = undefined;
+      clearAlbumInfo();
+      if (initialized) start();
+    });
     reducedMotion.addEventListener('change', () => { if (initialized) start(); });
     window.addEventListener('resize', () => {
       if (!initialized) return;
