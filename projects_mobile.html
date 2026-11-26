@@ -10,7 +10,7 @@
     .box { height: auto; min-height: 80vh; margin: 10vh 0; }
     .project-band { position: relative; width: 100%; }
     .project-cover { position: absolute; display: block; }
-    .project-cover img {
+    .project-cover img, .project-cover video {
       position: absolute;
       inset: 5%;
       width: 90%;
@@ -18,8 +18,10 @@
       object-fit: contain;
       display: block;
     }
+    .project-cover video { pointer-events: none; }
+    .project-cover.preview-playing video { z-index: 1; }
   </style>
-  <script type="module" src="/projects/mobile.js"></script>
+  <script type="module" src="/projects/mobile.js?v=video-preview"></script>
 </head>
 <body>
   <div class="wrap">
