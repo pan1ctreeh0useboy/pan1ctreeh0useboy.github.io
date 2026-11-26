@@ -2,6 +2,27 @@
   "version": 1,
   "projects": [
     {
+      "id": "92a834e5-8066-4b84-8687-5d7c615af50c",
+      "revision": "e8cae2ca-0de3-4d13-a447-88844605376a",
+      "title": "?????_v1",
+      "date": "0001-01-01",
+      "type": "Graphic Design",
+      "format": "a3",
+      "links": {
+        "behance": "",
+        "vimeo": "",
+        "youtube": "",
+        "bilibili": ""
+      },
+      "images": [
+        {
+          "src": "/projects/uploads/e8cae2ca-0de3-4d13-a447-88844605376a-0.jpg",
+          "width": 3508,
+          "height": 4961
+        }
+      ]
+    },
+    {
       "id": "a0dc9cb0-a076-44b6-8a85-ddf6b1b1652c",
       "revision": "82d63743-808a-482d-ac86-ac936e8313d3",
       "title": "Isometric 3D View for Crowcon @DCWA Singapore 2026",
