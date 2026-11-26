@@ -2,6 +2,27 @@
   "version": 1,
   "projects": [
     {
+      "id": "3101d7dd-3b6c-4140-8f09-1e99376962ba",
+      "revision": "932edfb5-a5a0-4e86-9f3b-a30238d05143",
+      "title": "?????_v2",
+      "date": "0001-01-01",
+      "type": "Graphic Design",
+      "format": "a3",
+      "links": {
+        "behance": "",
+        "vimeo": "",
+        "youtube": "",
+        "bilibili": ""
+      },
+      "images": [
+        {
+          "src": "/projects/uploads/932edfb5-a5a0-4e86-9f3b-a30238d05143-0.png",
+          "width": 3508,
+          "height": 4961
+        }
+      ]
+    },
+    {
       "id": "92a834e5-8066-4b84-8687-5d7c615af50c",
       "revision": "e8cae2ca-0de3-4d13-a447-88844605376a",
       "title": "?????_v1",
