@@ -276,3 +276,23 @@ export function chooseLayout(items, isCompact, entranceGuides = []) {
   }
   return best;
 }
+
+export function chooseBandLayout(cards, isCompact, entranceGuides) {
+  let items = cards;
+  let layout = chooseLayout(items, isCompact, entranceGuides);
+  if (!isCompact) return {items, overflow: [], layout};
+
+  // A third of the gallery is the minimum artwork width for a shared mobile band.
+  while (items.length > 1) {
+    const tooSmall = layout.rectangles.findLastIndex(({width, height}, index) => {
+      const {cover, format} = items[index];
+      const ratio = cover ? cover.width / cover.height : format.ratio;
+      return Math.min(width, height * ratio) < 1 / 3;
+    });
+    if (tooSmall < 0) break;
+    items = items.filter((_, index) => index !== tooSmall);
+    layout = chooseLayout(items, true, entranceGuides);
+  }
+  const placed = new Set(items);
+  return {items, overflow: cards.filter(card => !placed.has(card)), layout};
+}

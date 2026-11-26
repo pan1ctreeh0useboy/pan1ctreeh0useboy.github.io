@@ -1,5 +1,5 @@
 import { readProjects, setProjectImage } from './catalog.js?v=fast-feed';
-import { chooseLayout, dividers } from './layout.js';
+import { chooseBandLayout, dividers } from './layout.js?v=mobile-reflow';
 import { formats } from './formats.js';
 import { homepageCover } from './media-order.js';
 
@@ -94,9 +94,14 @@ function draw(projects) {
   feed.querySelectorAll('.project-cover').forEach(card => setPreviewVisibility.get(card)?.(false));
   const fragment = document.createDocumentFragment();
   let exitGuides = [];
-  for (let start = 0; start < projects.length; start += projectsPerBand) {
-    const items = projects.slice(start, start + projectsPerBand);
-    const {height, rectangles} = chooseLayout(items, compact.matches, exitGuides);
+  let overflow = [];
+  let next = 0;
+  while (next < projects.length || overflow.length) {
+    const incoming = projects.slice(next, next + projectsPerBand - overflow.length);
+    next += incoming.length;
+    const bandLayout = chooseBandLayout([...overflow, ...incoming], compact.matches, exitGuides);
+    const {items, layout: {height, rectangles}} = bandLayout;
+    overflow = bandLayout.overflow;
     exitGuides = dividers(rectangles, 'x', 1)
       .filter(line => line.spans.some(span => Math.abs(span.to - height) < 1e-6))
       .map(line => line.position);
@@ -114,7 +119,7 @@ function draw(projects) {
       const img = document.createElement('img');
       img.alt = project.title;
       img.decoding = 'async';
-      if (start || index > 1) img.loading = 'lazy';
+      if (fragment.childElementCount || index > 1) img.loading = 'lazy';
       else if (index === 0) img.fetchPriority = 'high';
       setProjectImage(img, cover.thumbnailSrc ? {...cover, src: cover.thumbnailSrc, fallbackSrc: cover.src} : cover);
       detail.append(img);
