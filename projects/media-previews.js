@@ -13,10 +13,13 @@ function encode(canvas, type, quality) {
 }
 
 export async function imageThumbnail(bitmap) {
-  const canvas = scaledCanvas(bitmap.width, bitmap.height, 840);
-  canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-  const thumbnail = await encode(canvas, 'image/webp', 0.76);
-  return thumbnail.size <= 1024 * 1024 ? thumbnail : encode(canvas, 'image/jpeg', 0.8);
+  for (const maxSide of [840, 640, 420]) {
+    const canvas = scaledCanvas(bitmap.width, bitmap.height, maxSide);
+    canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    const thumbnail = await encode(canvas, 'image/webp', 0.76);
+    if (thumbnail.size <= 256 * 1024) return thumbnail;
+    if (maxSide === 420) return encode(canvas, 'image/jpeg', 0.76);
+  }
 }
 
 function waitForVideo(video, eventName, start) {

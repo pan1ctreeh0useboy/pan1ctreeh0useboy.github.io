@@ -7,7 +7,7 @@ const maxFileSize = 24 * 1024 * 1024;
 const maxUploadSize = 25 * 1024 * 1024;
 const maxThumbnailSize = 1024 * 1024;
 const maxAnimationSize = 2 * 1024 * 1024;
-const maxBodySize = 30 * 1024 * 1024;
+const maxBodySize = 32 * 1024 * 1024;
 const projectId = /^[a-z0-9][a-z0-9-]{0,79}$/;
 const revisionId = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
@@ -73,18 +73,30 @@ export async function parseProjectSave(request) {
   const covers = form.getAll('videoCover');
   const thumbnails = form.getAll('thumbnail');
   const animations = form.getAll('videoAnimation');
+  const cardThumbnails = form.getAll('cardThumbnail');
   check(files.length <= 10 && videos.length <= 1, 'Choose up to 10 images and one MP4 video.');
   check(!input.create || files.length || videos.length, 'New projects require an image or a video.');
   check(files.length === input.dimensions?.length, 'Image dimensions are incomplete.');
   check(covers.length === videos.length, 'The video cover is missing.');
   const order = input.order;
   check(order === undefined || Array.isArray(order) && order.every(key => typeof key === 'string'), 'Invalid media order.');
+  const homepage = input.homepage;
+  check(homepage === undefined || order && Array.isArray(homepage) && homepage.every(entry =>
+    Array.isArray(entry) && entry.length === 2 && typeof entry[0] === 'string' &&
+    (entry[1] === 'auto' || typeof entry[1] === 'string' && Object.hasOwn(formats, entry[1]))), 'Invalid homepage container type.');
+  const homepageFormats = new Map(homepage);
+  check(homepage === undefined || homepage.length === homepageFormats.size, 'A homepage card was listed more than once.');
+  const thumbnailKeys = input.thumbnailKeys ?? [];
+  check(Array.isArray(thumbnailKeys) && thumbnailKeys.length === cardThumbnails.length &&
+    new Set(thumbnailKeys).size === thumbnailKeys.length && thumbnailKeys.every(key =>
+      typeof key === 'string' && key !== 'video' && (key === order?.[0] || homepageFormats.has(key))), 'Invalid homepage thumbnails.');
   const canAddThumbnail = order ? order[0] !== 'video' : files.length > 0;
-  check(thumbnails.length <= Number(canAddThumbnail) && animations.length <= videos.length, 'Invalid homepage previews.');
+  check(thumbnails.length <= Number(canAddThumbnail) && !(thumbnails.length && cardThumbnails.length) &&
+    animations.length <= videos.length, 'Invalid homepage previews.');
   const originals = [...files, ...videos];
   for (const file of originals) checkFile(file, maxFileSize, 'Each original must be 24 MB or smaller.');
   check(originals.reduce((size, file) => size + file.size, 0) <= maxUploadSize, 'Originals must total 25 MB or less per save.');
-  for (const file of [...thumbnails, ...covers]) checkFile(file, maxThumbnailSize, 'Each cover must be 1 MB or smaller.');
+  for (const file of [...thumbnails, ...covers, ...cardThumbnails]) checkFile(file, maxThumbnailSize, 'Each cover must be 1 MB or smaller.');
   for (const file of animations) checkFile(file, maxAnimationSize, 'The animated preview must be 2 MB or smaller.');
   const prefix = `projects/uploads/${input.revision}`;
   const uploads = [];
@@ -101,6 +113,13 @@ export async function parseProjectSave(request) {
     const path = `${prefix}-thumb.${fileExtension(bytes)}`;
     thumbnailSrc = `/${path}`;
     if (!order) uploads[0].image.thumbnailSrc = thumbnailSrc;
+    uploads.push({path, bytes});
+  }
+  const cardThumbnailPaths = new Map();
+  for (const [index, file] of cardThumbnails.entries()) {
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    const path = `${prefix}-card-${index}.${fileExtension(bytes)}`;
+    cardThumbnailPaths.set(thumbnailKeys[index], `/${path}`);
     uploads.push({path, bytes});
   }
   let video;
@@ -133,7 +152,7 @@ export async function parseProjectSave(request) {
     }
   }
   return {
-    create: input.create, expectedRevision: input.expectedRevision, uploads, video, order, thumbnailSrc,
+    create: input.create, expectedRevision: input.expectedRevision, uploads, video, order, thumbnailSrc, cardThumbnailPaths, homepageFormats: homepage === undefined ? undefined : homepageFormats,
     project: {id: input.id, revision: input.revision, title, date, type, format: input.format, links},
   };
 }
@@ -195,7 +214,21 @@ export class GitHubProjects extends GitHubGallery {
           edit.order.every(key => media.has(key)), 'The order must include each image and video exactly once.');
         const first = media.get(edit.order[0]);
         check(first, 'Add at least one image or video.');
-        project.images = edit.order.filter(key => key !== 'video').map(key => media.get(key));
+        const imageKeys = edit.order.filter(key => key !== 'video');
+        const selectedImages = new Set(imageKeys);
+        check([...(edit.homepageFormats?.keys() ?? []), ...edit.cardThumbnailPaths.keys()].every(key => selectedImages.has(key)),
+          'Homepage cards must reference images in this project.');
+        project.images = imageKeys.map(key => {
+          const image = {...media.get(key)};
+          if (edit.homepageFormats) {
+            const format = edit.homepageFormats.get(key);
+            if (format) image.homepageFormat = format;
+            else delete image.homepageFormat;
+          }
+          const thumbnail = edit.cardThumbnailPaths.get(key);
+          if (thumbnail) image.thumbnailSrc = thumbnail;
+          return image;
+        });
         if (video) project.videoIndex = edit.order.indexOf('video');
         if (edit.thumbnailSrc) project.images[0] = {...project.images[0], thumbnailSrc: edit.thumbnailSrc};
         project.coverRatio = Math.max(1 / 3, Math.min(3, first.width / first.height));

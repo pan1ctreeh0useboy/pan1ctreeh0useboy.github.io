@@ -1,6 +1,6 @@
 import { uploadService, setProjectImage } from './catalog.js';
-import { platforms } from './formats.js';
-import { imageThumbnail, videoPreviews } from './media-previews.js';
+import { formats, platforms } from './formats.js';
+import { imageThumbnail, videoPreviews } from './media-previews.js?v=homepage-cards';
 import { orderedMedia } from './media-order.js';
 
 const login = document.querySelector('#login-form');
@@ -38,6 +38,35 @@ function releasePreviews() {
   for (const item of media) {
     if (item.previewUrl) URL.revokeObjectURL(item.previewUrl);
   }
+}
+
+function homepageControls(item, index) {
+  const controls = document.createElement('div');
+  controls.className = 'homepage-controls';
+
+  const show = document.createElement('input');
+  show.type = 'checkbox';
+  show.checked = !!item.showOnHomepage;
+  show.setAttribute('aria-label', `Show item ${index + 1} on homepage`);
+  const showLabel = document.createElement('label');
+  showLabel.append(show, ' Show on homepage');
+
+  const format = document.createElement('select');
+  format.setAttribute('aria-label', `Container type for item ${index + 1}`);
+  format.add(new Option('Match image', 'auto'));
+  for (const [key, {label}] of Object.entries(formats)) format.add(new Option(label, key));
+  format.value = item.homeFormat ?? 'auto';
+  format.disabled = !show.checked;
+  const formatLabel = document.createElement('label');
+  formatLabel.append('Container type', format);
+
+  show.addEventListener('change', () => {
+    item.showOnHomepage = show.checked;
+    format.disabled = !show.checked;
+  });
+  format.addEventListener('change', () => { item.homeFormat = format.value; });
+  controls.append(showLabel, formatLabel);
+  return controls;
 }
 
 function renderMedia() {
@@ -96,6 +125,7 @@ function renderMedia() {
     }
     const preview = img.hasAttribute('src') ? img : document.createElement('span');
     row.append(preview, label, actions);
+    if (index > 0 && item.kind === 'image') row.append(homepageControls(item, index));
     mediaList.append(row);
   }
 }
@@ -109,7 +139,9 @@ function showProject() {
   for (const key of Object.keys(platforms)) form.elements[key].value = project?.links?.[key] ?? '';
 
   releasePreviews();
-  media = project ? orderedMedia(project) : [];
+  media = project ? orderedMedia(project).map(item => ({
+    ...item, showOnHomepage: !!item.image?.homepageFormat, homeFormat: item.image?.homepageFormat,
+  })) : [];
   renderMedia();
   newId = crypto.randomUUID();
   revision = crypto.randomUUID();
@@ -224,36 +256,41 @@ form.addEventListener('submit', async event => {
   try {
     const payload = new FormData();
     const dimensions = [];
-    for (const file of files) {
-      const bitmap = await createImageBitmap(file);
+    const thumbnailKeys = [];
+    let newImageIndex = 0;
+    const items = media.map(item => ({
+      ...item,
+      key: item.kind === 'video' ? 'video' : item.file ? `new:${newImageIndex++}` : `image:${item.index}`,
+    }));
+    const order = items.map(item => item.key);
+    const homepage = items.filter(item => item.showOnHomepage).map(item => [item.key, item.homeFormat ?? 'auto']);
+
+    for (const [index, item] of items.entries()) {
+      if (item.kind !== 'image') continue;
+      const needsThumbnail = (index === 0 || item.showOnHomepage) && !item.image?.thumbnailSrc;
+      if (!item.file && !needsThumbnail) continue;
+      status.textContent = 'Preparing homepage previews…';
+      let source = item.file;
+      if (!source) {
+        try {
+          const response = await fetch(item.image.src, {signal: AbortSignal.timeout(15000)});
+          if (response.ok) source = await response.blob();
+        } catch {
+          // Keep saved originals usable while a Pages build is still publishing.
+        }
+        if (!source) continue;
+      }
+      const bitmap = await createImageBitmap(source);
       try {
-        dimensions.push({width: bitmap.width, height: bitmap.height});
-        if (file === media[0]?.file) payload.append('thumbnail', await imageThumbnail(bitmap), 'thumbnail');
+        if (item.file) dimensions.push({width: bitmap.width, height: bitmap.height});
+        if (needsThumbnail) {
+          payload.append('cardThumbnail', await imageThumbnail(bitmap), 'thumbnail');
+          thumbnailKeys.push(item.key);
+        }
       } finally {
         bitmap.close();
       }
     }
-    const first = media[0];
-    if (first?.image && !first.image.thumbnailSrc) {
-      try {
-        const response = await fetch(first.image.src);
-        if (response.ok) {
-          const bitmap = await createImageBitmap(await response.blob());
-          try {
-            payload.append('thumbnail', await imageThumbnail(bitmap), 'thumbnail');
-          } finally {
-            bitmap.close();
-          }
-        }
-      } catch {
-        // A missing original does not block a reorder.
-      }
-    }
-    let newImageIndex = 0;
-    const order = media.map(item => {
-      if (item.kind === 'video') return 'video';
-      return item.file ? `new:${newImageIndex++}` : `image:${item.index}`;
-    });
     let videoDimensions;
     let missingAnimation = false;
     if (video) {
@@ -265,7 +302,7 @@ form.addEventListener('submit', async event => {
       else missingAnimation = true;
     }
     payload.set('metadata', JSON.stringify({
-      id, revision, expectedRevision: previous?.revision ?? null, create: !previous, dimensions, videoDimensions, order,
+      id, revision, expectedRevision: previous?.revision ?? null, create: !previous, dimensions, videoDimensions, order, homepage, thumbnailKeys,
       title: form.elements.title.value, date: form.elements.date.value,
       type: form.elements.type.value, format: previous?.format ?? 'square',
       links: Object.fromEntries(Object.keys(platforms).map(key => [key, form.elements[key].value])),

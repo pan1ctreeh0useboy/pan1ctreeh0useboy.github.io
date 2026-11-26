@@ -105,7 +105,7 @@ function draw(projects) {
     band.className = 'project-band';
     band.style.aspectRatio = String(1 / height);
     rectangles.forEach(({x, y, width, height: tileHeight}, index) => {
-      const {project} = items[index];
+      const {project, cover, video} = items[index];
       const detail = document.createElement('a');
       detail.className = 'project-cover';
       detail.href = '/project_mobile.html?id=' + encodeURIComponent(project.id);
@@ -116,10 +116,9 @@ function draw(projects) {
       img.decoding = 'async';
       if (start || index > 1) img.loading = 'lazy';
       else if (index === 0) img.fetchPriority = 'high';
-      const cover = homepageCover(project);
       setProjectImage(img, cover.thumbnailSrc ? {...cover, src: cover.thumbnailSrc, fallbackSrc: cover.src} : cover);
       detail.append(img);
-      if (project.video) addPreview(detail, project.video);
+      if (video) addPreview(detail, video);
       band.append(detail);
     });
     fragment.append(band);
@@ -130,9 +129,18 @@ function draw(projects) {
 try {
   const projects = (await readProjects({staticFirst: true}))
     .filter(project => Object.hasOwn(formats, project.format) && (project.images?.length || project.video?.cover))
-    .map(project => {
+    .flatMap(project => {
       const preset = formats[project.format];
-      return {project, format: {...preset, ratio: project.coverRatio ?? preset.ratio}};
+      const cover = homepageCover(project);
+      const cards = [{project, cover, video: project.video, format: {...preset, ratio: project.coverRatio ?? preset.ratio}}];
+      for (const image of project.images) {
+        if (image === cover) continue;
+        const format = image.homepageFormat === 'auto'
+          ? {...preset, ratio: Math.max(1 / 3, Math.min(3, image.width / image.height))}
+          : Object.hasOwn(formats, image.homepageFormat) ? formats[image.homepageFormat] : null;
+        if (format) cards.push({project, cover: image, format});
+      }
+      return cards;
     });
   draw(projects);
   compact.addEventListener('change', () => draw(projects));
