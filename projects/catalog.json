@@ -25,7 +25,7 @@
     },
     {
       "id": "a0dc9cb0-a076-44b6-8a85-ddf6b1b1652c",
-      "revision": "35f128ee-c7a7-4c53-90cc-7de33890488e",
+      "revision": "c3ffdbd8-761d-484d-8da9-450d2080fc31",
       "title": "Isometric 3D View for Crowcon @DCWA Singapore 2026",
       "date": "2026-09-04",
       "type": "Motion Design/3D Modeling",
@@ -41,14 +41,14 @@
           "src": "/projects/uploads/35f128ee-c7a7-4c53-90cc-7de33890488e-0.jpg",
           "width": 2632,
           "height": 2160,
-          "homepageFormat": "square",
+          "homepageFormat": "photo",
           "thumbnailSrc": "/projects/uploads/35f128ee-c7a7-4c53-90cc-7de33890488e-card-0.webp"
         },
         {
           "src": "/projects/uploads/35f128ee-c7a7-4c53-90cc-7de33890488e-1.png",
           "width": 2160,
           "height": 2641,
-          "homepageFormat": "auto",
+          "homepageFormat": "photo",
           "thumbnailSrc": "/projects/uploads/35f128ee-c7a7-4c53-90cc-7de33890488e-card-1.webp"
         }
       ],
